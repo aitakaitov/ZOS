@@ -1,0 +1,3 @@
+/home/vojtech/CLionProjects/ZOS/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/vojtech/CLionProjects/ZOS/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/vojtech/CLionProjects/ZOS/cmake-build-debug/CMakeFiles/ZOS.dir

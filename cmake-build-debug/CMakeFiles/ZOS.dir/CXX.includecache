@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/vojtech/CLionProjects/ZOS/FileSystem.h
+string
+-
+array
+-
+fstream
+-
+
+/home/vojtech/CLionProjects/ZOS/LibraryMethods.h
+vector
+-
+
+/home/vojtech/CLionProjects/ZOS/createDirectoryItem.cpp
+vector
+-
+cstring
+-
+iostream
+-
+FileSystem.h
+/home/vojtech/CLionProjects/ZOS/FileSystem.h
+LibraryMethods.h
+/home/vojtech/CLionProjects/ZOS/LibraryMethods.h
+

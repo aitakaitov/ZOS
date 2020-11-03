@@ -25,3 +25,26 @@ int FileSystem::getFreeInode()
     return -1;
 }
 
+int FileSystem::getFreeInodesNum()
+{
+    int bytes = this->sb->inodeStartAddress - this->sb->inodeMapStartAddress;
+    char map[bytes];
+    this->readFromFS(map, bytes, this->sb->inodeMapStartAddress);
+
+    int c = 0;
+    int free = 0;
+    for (int i = 0; i < bytes; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            c++;
+            if (c > this->sb->inodeCount)
+                return free;
+            if (LibraryMethods::checkBit(map[i], j) == 0)
+                free++;
+        }
+    }
+
+    return free;
+}
+

@@ -1,7 +1,7 @@
 #include <cstring>
 #include "FileSystem.h"
 
-int FileSystem::searchDirect(int address, std::string name)
+int FileSystem::searchDirect(int address, const std::string& name)
 {
     int dirItemsInBlock = BLOCK_SIZE / sizeof(directoryItem);
     char blockArr[BLOCK_SIZE];
@@ -18,39 +18,6 @@ int FileSystem::searchDirect(int address, std::string name)
     return -1;
 }
 
-/*int FileSystem::searchIndirect1(int address, std::string name)
-{
-    char blockArr[BLOCK_SIZE];
-    this->readFromFS(blockArr, BLOCK_SIZE, address);
-    int pointersInBlock = BLOCK_SIZE / sizeof(int32_t);
-    for (int i = 0; i < pointersInBlock; i++)
-    {
-        int32_t add;
-        memcpy(&add, blockArr + i * sizeof(int32_t), sizeof(int32_t));
-        int returnValue = searchDirect(add, name);
-        if (returnValue != -1)
-            return returnValue;
-    }
-
-    return -1;
-}
-
-int FileSystem::searchIndirect2(int address, std::string name)
-{
-    char blockArr[BLOCK_SIZE];
-    this->readFromFS(blockArr, BLOCK_SIZE, address);
-    int pointersInBlock = BLOCK_SIZE / sizeof(int32_t);
-    for (int i = 0; i < pointersInBlock; i++)
-    {
-        int32_t add;
-        memcpy(reinterpret_cast<void *>(add), blockArr + i * sizeof(int32_t), sizeof(int32_t));
-        int returnValue = searchIndirect1(add, name);
-        if (returnValue != -1)
-            return returnValue;
-    }
-
-    return -1;
-}*/
 
 // returns directoryItem address, -1 if not found
 int FileSystem::findDirItemInInode(const std::string& name, inode ind)

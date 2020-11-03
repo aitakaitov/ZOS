@@ -11,6 +11,9 @@ int FileSystem::getInodeAddressForPath(std::string path)
     char inodeArr[sizeof(inode)];
     int inodeAddress;
 
+    if (path.empty())
+        return currentInodeAddress;
+
     // Test if the path is absolute - remove the / and make our starting point root inode
     if (path.at(0) == fslash)
     {
@@ -25,9 +28,6 @@ int FileSystem::getInodeAddressForPath(std::string path)
         memcpy(&currentInode, inodeArr, sizeof(inode));
         inodeAddress = this->currentInodeAddress;
     }
-
-    if (path.size() == 0)
-        return inodeAddress;
 
     std::vector<std::string> splitPath = LibraryMethods::split(path, '/');
     for (int i = 0; i < splitPath.size(); i++)

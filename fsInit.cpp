@@ -130,5 +130,7 @@ int FileSystem::createRoot()
     this->writeToFS(&c1, 1, blockMapAddress);
 
     this->currentInodeAddress = inodeAddress;
+
+    return 0;
 }
 

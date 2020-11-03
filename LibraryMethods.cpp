@@ -67,7 +67,7 @@ int LibraryMethods::checkBit(char byte, int pos) {
     return (byte >> pos) & 1U;
 }
 
-std::vector<std::string> LibraryMethods::split(std::string str, char delim)
+std::vector<std::string> LibraryMethods::split(const std::string& str, char delim)
 {
     std::istringstream ss(str);
     std::string token;

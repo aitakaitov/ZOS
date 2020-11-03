@@ -36,7 +36,7 @@ int FileSystem::getFreeBlocksNum()
         for (int j = 0; j < 8; j++)
         {
             c++;
-            if (c > this->sb->inodeCount)
+            if (c > this->sb->blockCount)
                 return free;
             if (LibraryMethods::checkBit(map[i], j) == 0)
                 free++;

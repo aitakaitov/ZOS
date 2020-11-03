@@ -8,7 +8,7 @@ public:
     static int parseFSSize(std::string fsSize);
     static char toggleBit(char byte, int pos);
     static int checkBit(char byte, int pos);
-    static std::vector<std::string> split(std::string str, char delim);
+    static std::vector<std::string> split(const std::string& str, char delim);
     static bool fileExists(const std::string &path);
 };
 

@@ -5,11 +5,12 @@
 #include <string>
 #include <array>
 #include <fstream>
+#include <vector>
 
 const int32_t ID_ITEM_FREE = 0;     // i-node is free if it has this as inodeid
 
-const int32_t BYTES_PER_INODE = 128; // there will be 1 i-node per BYTES_PER_INODE bytes in FS
-const int32_t BLOCK_SIZE = 80;      // data block size in bytes
+const int32_t BYTES_PER_INODE = 64; // there will be 1 i-node per BYTES_PER_INODE bytes in FS
+const int32_t BLOCK_SIZE = 60;      // data block size in bytes
 const int32_t FS_NAME_LENGTH = 12;
 
 struct superblock {
@@ -66,13 +67,15 @@ public:
     int processCommand(std::string command);
 
 
-    int createDirectoryItem(std::string path, bool isDirectory, char *bytes = NULL, int length = -1);
+    int createDirectoryItem(std::string path, bool isDirectory, FILE *file = NULL);
+    std::vector<directoryItem> getAllDirItemsFromDirect(int blockAddress);
+    int removeDirectory(std::string path);
     int findDirItemInInode(const std::string& name, inode ind);
     int addDirItemToInode(char *name, char *extension, int inodeAddress, int inodeReference);
     int addDirItemToDirect(char *name, char *extension, int blockAddress, int inodeReference);
-    int removeDirItemFromInode(std::string name, int inodeAddress);
+    void removeDirItemFromInode(const std::string& name, int inodeAddress);
 
-    int createInode(int inodeIndex, int blockIndex, int parentInodeAddress, const char *bytes, int length);
+    int createInode(int inodeIndex, int blockIndex, int parentInodeAddress, FILE *bytes);
     int fillBlock(int blockAddress, char *bytes, int length);
 
     // bitmapOperations.cpp
@@ -83,12 +86,27 @@ public:
     int getInodeAddressForPath(std::string path);
 
 private:
-    int searchDirect(int address, std::string name);
-    int searchIndirect1(int address, std::string name);
-    int searchIndirect2(int address, std::string name);
+    int searchDirect(int address, const std::string& name);
     int getFreeInode();
     int getFreeBlock();
     int getFreeBlocksNum();
+    int getFreeInodesNum();
+
+    int fillIndirect1(int blockAddress, FILE *file, int bytesToGo);
+
+    int fillIndirect2(int blockAddress, FILE *file, int bytesToGo);
+
+    int removeFile(std::string path);
+
+    int outcp(std::string filePath, const std::string& outputPath);
+
+    int cd(std::string path);
+
+    std::string getAbsolutePathToInode(int inodeAddress);
+
+    int info(std::string path);
+
+    int cat(std::string path);
 };
 
 

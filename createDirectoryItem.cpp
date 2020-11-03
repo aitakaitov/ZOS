@@ -5,7 +5,7 @@
 #include "LibraryMethods.h"
 
 // Creates a directory of a file given a path and data (data only in case it is a file)
-int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *bytes, int length)
+int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *file)
 {
     const char fslash = '/';
     inode ind = {};
@@ -54,12 +54,14 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
         }
         // We need a block for the inode.direct1
         int blockIndex = this->getFreeBlock();
+        std::cout << "Block " << blockIndex << " is free." <<std::endl;
         if (blockIndex == -1)
         {
             std::cout << "NO FREE BLOCK" << std::endl;
             return 4;
         }
         // Reserve a block for the new inode
+        std::cout << "Toggling block  (64 createDirectoryItem)" << blockIndex << std::endl;
         this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         // We need to add a directory item to the parent inode, which could require another block,
         // in case the ones allocated are full
@@ -77,6 +79,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
         // If there is no space to allocate the DI, un-reserve the block
         if (res != 0)
         {
+            std::cout << "Toggling block  (82 createDirectoryItem)" << blockIndex << std::endl;
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             std::cout << "MAX ITEMS IN DIRECTORY" << std::endl;
             return 4;
@@ -84,12 +87,13 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
 
         if (isDirectory)
         {
-            res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL, 0);
+            res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL);
             // If we are unsuccessful in creating the inode, we un-allocate the block
             if (res != 0)
             {
-                this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+                //this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
                 this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
+                return 1;
             }
             else    // Otherwise, we allocate the inode in the bitmap
                 {
@@ -99,12 +103,12 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
         }
         else
             {
-                res = this->createInode(inodeIndex, blockIndex, 0, bytes, length);
+                res = this->createInode(inodeIndex, blockIndex, 0, file);
                 if (res != 0)
                 {
-                    this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+                    //this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
                     this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
-
+                    return 1;
                 }
                 else
                 {
@@ -149,6 +153,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
                 return 4;
             }
             // Reserve a block for the new inode
+            std::cout << "Toggling block  (156 createDirectoryItem)" << blockIndex << std::endl;
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             // We need to add a directory item to the parent inode, which could require another block,
             // in case the ones allocated are full
@@ -166,6 +171,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
             // If there is no space to allocate the DI, un-reserve the block
             if (res != 0)
             {
+                std::cout << "Toggling block  (174 createDirectoryItem)" << blockIndex << std::endl;
                 this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
                 std::cout << "MAX ITEMS IN DIRECTORY" << std::endl;
                 return 4;
@@ -173,12 +179,13 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
 
             if (isDirectory)
             {
-                res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL, 0);
+                res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL);
                 // If we are unsuccessful in creating the inode, we un-allocate the block
                 if (res != 0)
                 {
-                    this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+                    //this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
                     this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
+                    return 1;
                 }
                 else    // Otherwise, we allocate the inode in the bitmap
                 {
@@ -188,12 +195,11 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
             }
             else
             {
-                res = this->createInode(inodeIndex, blockIndex, 0, bytes, length);
+                res = this->createInode(inodeIndex, blockIndex, 0, file);
                 if (res != 0)
                 {
-                    this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
                     this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
-
+                    return 1;
                 }
                 else
                 {
@@ -203,4 +209,6 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, char *by
             }
 
         }
+
+    return 0;
 }

@@ -3,11 +3,11 @@
 #include <vector>
 #include "FileSystem.h"
 
-std::vector<directoryItem> getAllDirItemsFromDirect(int blockAddress, FileSystem *fs)
+std::vector<directoryItem> FileSystem::getAllDirItemsFromDirect(int blockAddress)
 {
     char blockArr[BLOCK_SIZE];
     std::vector<directoryItem> returnVector;
-    fs->readFromFS(blockArr, BLOCK_SIZE, blockAddress);
+    this->readFromFS(blockArr, BLOCK_SIZE, blockAddress);
 
     for (int i = 0; i < BLOCK_SIZE / sizeof(directoryItem); i++)
     {
@@ -37,34 +37,34 @@ int FileSystem::list(int inodeAddress)
     std::vector<directoryItem> directoryItems;
     std::vector<directoryItem> partialResult;
 
-    partialResult = getAllDirItemsFromDirect(ind.direct1, this);
+    partialResult = getAllDirItemsFromDirect(ind.direct1);
     for (auto di : partialResult)
         directoryItems.emplace_back(di);
 
     if (ind.direct2 != 0)
     {
-        partialResult = getAllDirItemsFromDirect(ind.direct2, this);
+        partialResult = getAllDirItemsFromDirect(ind.direct2);
         for (auto di : partialResult)
             directoryItems.emplace_back(di);
     }
 
     if (ind.direct3 != 0)
     {
-        partialResult = getAllDirItemsFromDirect(ind.direct3, this);
+        partialResult = getAllDirItemsFromDirect(ind.direct3);
         for (auto di : partialResult)
             directoryItems.emplace_back(di);
     }
 
     if (ind.direct4 != 0)
     {
-        partialResult = getAllDirItemsFromDirect(ind.direct4, this);
+        partialResult = getAllDirItemsFromDirect(ind.direct4);
         for (auto di : partialResult)
             directoryItems.emplace_back(di);
     }
 
     if (ind.direct5 != 0)
     {
-        partialResult = getAllDirItemsFromDirect(ind.direct5, this);
+        partialResult = getAllDirItemsFromDirect(ind.direct5);
         for (auto di : partialResult)
             directoryItems.emplace_back(di);
     }
@@ -87,8 +87,13 @@ int FileSystem::list(int inodeAddress)
         }
         else
             {
-                std::cout << "- " << name << "." << extension << std::endl;
+                std::cout << "- " << name;
+                if (strcmp(extension, "") != 0)
+                    std::cout << "." << extension << std::endl;
+                else
+                    std::cout << std::endl;
             }
     }
 
+    return 0;
 }

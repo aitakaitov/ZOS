@@ -1,7 +1,5 @@
 #include <cstring>
-#include <iostream>
 #include "FileSystem.h"
-#include "LibraryMethods.h"
 
 int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress, int inodeReference)
 {
@@ -40,104 +38,6 @@ int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress
                 }
         }
 }
-
-/*int FileSystem::addDirItemToIndirect1(char *name, char *extension, int blockAddress, int inodeReference)
-{
-    bool allocatedBlock = false;
-    if (blockAddress == 0)
-    {
-        allocatedBlock = true;
-        int freeBlockIndex1 = this->getFreeBlock();
-
-        if (freeBlockIndex1 == -1)
-        {
-            std::cout << "NO FREE BLOCKS" << std::endl;
-            return -1;
-        }
-
-        this->toggleBitInBitmap(freeBlockIndex1, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        blockAddress = this->sb->blockStartAddress + freeBlockIndex1 * BLOCK_SIZE;
-    }
-
-    int refsInBlock = BLOCK_SIZE / sizeof(int32_t);
-    char blockArr[BLOCK_SIZE];
-    this->readFromFS(blockArr, BLOCK_SIZE, blockAddress);
-    for (int i = 0; i < refsInBlock; i++)
-    {
-        int32_t add = {};
-        memcpy(&add, blockArr + i * sizeof(int32_t), sizeof(int32_t));
-        int res = addDirItemToDirect(name, extension, add, inodeReference);
-        if (res > 0)
-        {
-            add = res;
-            memcpy(blockArr + i * sizeof(int32_t), &add, sizeof(int32_t));
-            this->writeToFS(blockArr, BLOCK_SIZE, blockAddress);
-
-            if (allocatedBlock)
-                return blockAddress;
-            else
-                return 0;
-        }
-        if (res == 0)
-        {
-            if (allocatedBlock)
-                return blockAddress;
-            else
-                return 0;
-        }
-    }
-
-    return -1;
-}
-
-int FileSystem::addDirItemToIndirect2(char *name, char *extension, int blockAddress, int inodeReference)
-{
-    bool allocatedBlock = false;
-    if (blockAddress == 0)
-    {
-        int freeBlockIndex1 = this->getFreeBlock();
-        allocatedBlock = true;
-
-        if (freeBlockIndex1 == 0)
-        {
-            std::cout << "NO FREE BLOCKS" << std::endl;
-            return -1;
-        }
-
-        this->toggleBitInBitmap(freeBlockIndex1, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        blockAddress = this->sb->blockStartAddress + freeBlockIndex1 * BLOCK_SIZE;
-    }
-
-    int refsInBlock = BLOCK_SIZE / sizeof(int32_t);
-    char blockArr[BLOCK_SIZE];
-    this->readFromFS(blockArr, BLOCK_SIZE, blockAddress);
-    for (int i = 0; i < refsInBlock; i++)
-    {
-        int32_t add = {};
-        memcpy(&add, reinterpret_cast<const void *>(blockArr[i * sizeof(int32_t)]), sizeof(int32_t));
-        int res = addDirItemToIndirect1(name, extension, add, inodeReference);
-        if (res > 0)
-        {
-            add = res;
-            memcpy(blockArr + i * sizeof(int32_t), &add, sizeof(int32_t));
-            this->writeToFS(blockArr, BLOCK_SIZE, blockAddress);
-
-            if (allocatedBlock)
-                return blockAddress;
-            else
-                return 0;
-        }
-        else if (res == 0)
-        {
-            if (allocatedBlock)
-                return blockAddress;
-            else
-                return 0;
-        }
-    }
-
-    return -1;
-}*/
 
 // name = file/dir name, extension = file extension, inodeAddress = inode we will place the item in, inodeReference = inode to which the item will point
 int FileSystem::addDirItemToInode(char *name, char *extension, int inodeAddress, int inodeReference)

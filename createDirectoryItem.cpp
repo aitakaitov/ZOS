@@ -54,32 +54,29 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
         }
         // We need a block for the inode.direct1
         int blockIndex = this->getFreeBlock();
-        std::cout << "Block " << blockIndex << " is free." <<std::endl;
         if (blockIndex == -1)
         {
             std::cout << "NO FREE BLOCK" << std::endl;
             return 4;
         }
         // Reserve a block for the new inode
-        std::cout << "Toggling block  (64 createDirectoryItem)" << blockIndex << std::endl;
         this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         // We need to add a directory item to the parent inode, which could require another block,
         // in case the ones allocated are full
         std::vector<std::string> splitName = LibraryMethods::split(splitPath.at(0), '.');
         char name[8];
         memset(name, 0, 8);
-        strcpy(name, splitName.at(0).c_str());
+        memcpy(name, splitName.at(0).c_str(), splitName.at(0).size());
 
         char extension[3];
         memset(extension, 0, 3);
         if (splitName.size() == 2)
-            memcpy(extension, &splitName.at(1), 3);
+            memcpy(extension, splitName.at(1).c_str(), splitName.at(1).size());
 
         int res = this->addDirItemToInode(name, extension, inodeAddress, this->sb->inodeStartAddress + inodeIndex * sizeof(inode));
         // If there is no space to allocate the DI, un-reserve the block
         if (res != 0)
         {
-            std::cout << "Toggling block  (82 createDirectoryItem)" << blockIndex << std::endl;
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             std::cout << "MAX ITEMS IN DIRECTORY" << std::endl;
             return 4;
@@ -153,25 +150,23 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 return 4;
             }
             // Reserve a block for the new inode
-            std::cout << "Toggling block  (156 createDirectoryItem)" << blockIndex << std::endl;
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             // We need to add a directory item to the parent inode, which could require another block,
             // in case the ones allocated are full
             std::vector<std::string> splitName = LibraryMethods::split(splitPath.at(splitPath.size() - 1), '.');
             char name[8];
             memset(name, 0, 8);
-            strcpy(name, splitName.at(0).c_str());
+            memcpy(name, splitName.at(0).c_str(), splitName.at(0).size());
 
             char extension[3];
             memset(extension, 0, 3);
             if (splitName.size() == 2)
-                memcpy(extension, &splitName.at(1), 3);
+                memcpy(extension, splitName.at(1).c_str(), splitName.at(1).size());
 
             int res = this->addDirItemToInode(name, extension, inodeAddress, this->sb->inodeStartAddress + inodeIndex * sizeof(inode));
             // If there is no space to allocate the DI, un-reserve the block
             if (res != 0)
             {
-                std::cout << "Toggling block  (174 createDirectoryItem)" << blockIndex << std::endl;
                 this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
                 std::cout << "MAX ITEMS IN DIRECTORY" << std::endl;
                 return 4;

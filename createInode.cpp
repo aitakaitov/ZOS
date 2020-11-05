@@ -114,7 +114,6 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
         if (res != 0)
         {
             std::cout << "NO FREE BLOCKS" << std::endl;
-            std::cout << "Toggling block  (117 createInode)" << blockIndex << std::endl;
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             return 1;
         }
@@ -124,7 +123,6 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
         if (res != 0)
         {
             this->removeDirItemFromInode(name, inodeAddress);
-            std::cout << "Toggling block  (127 createInode)" << blockIndex << std::endl;
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             name[1] = '.';
             std::cout << "NO FREE BLOCKS" << std::endl;
@@ -143,7 +141,6 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
     else
         {
             // One block is reserved already, but thats not convenient for us
-            std::cout << "Toggling block  (147 createInode)" << blockIndex << std::endl;
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             int freeBlocks = this->getFreeBlocksNum();
             int referencesPerBlock = BLOCK_SIZE / sizeof(int32_t);

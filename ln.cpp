@@ -59,7 +59,6 @@ int FileSystem::ln(std::string pathToFile, std::string pathToLink)
     memcpy(indArr, &ind, sizeof(inode));
     this->writeToFS(indArr, sizeof(inode), fileInodeAddress);
 
-    std::cout << "OK" << std::endl;
     return 0;
 }
 

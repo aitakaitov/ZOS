@@ -98,8 +98,6 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
         }
     }
 
-    std::cout << "OK" << std::endl;
-
     fclose(file);
     return 0;
 }

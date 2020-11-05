@@ -23,7 +23,8 @@ int FileSystem::processCommand(std::string command)
     }
     else if (splitCommand.at(0) == "mkdir")
     {
-        this->createDirectoryItem(splitCommand.at(1), true);
+        if (this->createDirectoryItem(splitCommand.at(1), true) == 0)
+            std::cout << "OK" << std::endl;
     }
     else if (splitCommand.at(0) == "ls")
     {
@@ -39,11 +40,13 @@ int FileSystem::processCommand(std::string command)
     }
     else if (splitCommand.at(0) == "rmdir")
     {
-        this->removeDirectory(splitCommand.at(1));
+        if (this->removeDirectory(splitCommand.at(1)) == 0)
+            std::cout << "OK" << std::endl;
     }
     else if (splitCommand.at(0) == "rm")
     {
-        this->removeFile(splitCommand.at(1));
+        if (this->removeFile(splitCommand.at(1)) == 0)
+            std::cout << "OK" << std::endl;
     }
     else if (splitCommand.at(0) == "incp")
     {
@@ -53,11 +56,13 @@ int FileSystem::processCommand(std::string command)
             std::cout << "FILE NOT FOUND" << std::endl;
             return 0;
         }
-        this->createDirectoryItem(splitCommand.at(2), false, file);
+        if (this->createDirectoryItem(splitCommand.at(2), false, file) == 0)
+            std::cout << "OK" << std::endl;
     }
     else if (splitCommand.at(0) == "outcp")
     {
-        this->outcp(splitCommand.at(1), splitCommand.at(2));
+        if (this->outcp(splitCommand.at(1), splitCommand.at(2)) == 0)
+            std::cout << "OK" << std::endl;
     }
     else if (splitCommand.at(0) == "freeb")
     {
@@ -75,13 +80,23 @@ int FileSystem::processCommand(std::string command)
     {
         std::cout << this->currentPath << std::endl;
     }
-    else if (splitCommand.at(0) == "info") // TODO after hardlinks
+    else if (splitCommand.at(0) == "info")
     {
         this->info(splitCommand.at(1));
     }
     else if (splitCommand.at(0) == "cat")
     {
         this->cat(splitCommand.at(1));
+    }
+    else if (splitCommand.at(0) == "mv")
+    {
+        if (this->moveFile(splitCommand.at(1), splitCommand.at(2)) == 0)
+            std::cout << "OK" << std::endl;
+    }
+    else if (splitCommand.at(0) == "ln")
+    {
+        if (this->ln(splitCommand.at(1), splitCommand.at(2)) == 0)
+            std::cout << "OK" << std::endl;
     }
     else
         {

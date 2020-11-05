@@ -95,7 +95,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
             else    // Otherwise, we allocate the inode in the bitmap
                 {
                     this->toggleBitInBitmap(inodeIndex, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);
-                    std::cout << "OK" << std::endl;
+                    return 0;
                 }
         }
         else
@@ -110,7 +110,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 else
                 {
                     this->toggleBitInBitmap(inodeIndex, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);
-                    std::cout << "OK" << std::endl;
+                    return 0;
                 }
             }
 
@@ -185,7 +185,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 else    // Otherwise, we allocate the inode in the bitmap
                 {
                     this->toggleBitInBitmap(inodeIndex, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);
-                    std::cout << "OK" << std::endl;
+                    return 0;
                 }
             }
             else
@@ -199,7 +199,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 else
                 {
                     this->toggleBitInBitmap(inodeIndex, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);
-                    std::cout << "OK" << std::endl;
+                    return 0;
                 }
             }
 

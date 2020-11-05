@@ -146,6 +146,9 @@ int FileSystem::removeDirectory(std::string path)
         else
             parentInd.direct5 = 0;
 
+        parentInd.fileSize -= BLOCK_SIZE;
+        parentInd.references--;
+
         this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         memset(blockArr, 0, BLOCK_SIZE);
         this->writeToFS(blockArr, BLOCK_SIZE, blockAddress);
@@ -153,7 +156,6 @@ int FileSystem::removeDirectory(std::string path)
         this->writeToFS(indArr, sizeof(inode), parentInodeAddress);
     }
 
-    std::cout << "OK" << std::endl;
     return 0;
 }
 

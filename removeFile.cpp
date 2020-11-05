@@ -66,12 +66,23 @@ int FileSystem::removeFile(std::string path)
         else if (parentInd.direct5 == parentBlockAddress)
             parentInd.direct5 = 0;
 
+        parentInd.fileSize -= BLOCK_SIZE;
+        parentInd.references--;
+
         this->toggleBitInBitmap(parentBlockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         char blockArr[BLOCK_SIZE];
         memset(blockArr, 0, BLOCK_SIZE);
         this->writeToFS(blockArr, BLOCK_SIZE, parentBlockAddress);
         memcpy(indArr, &parentInd, sizeof(inode));
         this->writeToFS(indArr, sizeof(inode), parentInodeAddress);
+    }
+
+    if (indToRemove.references > 1)
+    {
+        indToRemove.references--;
+        memcpy(indArr, &indToRemove, sizeof(inode));
+        this->writeToFS(indArr, sizeof(inode), inodeAddress);
+        return 0;
     }
 
     // Remove the data the inode is pointing to
@@ -165,8 +176,6 @@ int FileSystem::removeFile(std::string path)
     this->toggleBitInBitmap(indToRemove.nodeid - 1, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);
     memset(indArr, 0, sizeof(inode));
     this->writeToFS(indArr, sizeof(inode), inodeAddress);
-
-    std::cout << "OK" << std::endl;
 
     return 0;
 }

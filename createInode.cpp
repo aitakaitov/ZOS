@@ -12,27 +12,27 @@ int FileSystem::fillBlock(int blockAddress, char *bytes, int length)
     return 0;
 }
 
-int FileSystem::fillIndirect1(int indirectBlockAddress, FILE *file, int bytesToGo)
+int fillIndirect1(int indirectBlockAddress, FILE *file, int bytesToGo, FileSystem *fs)
 {
     for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
     {
-        int blockIndex = this->getFreeBlock();
-        this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+        int blockIndex = fs->getFreeBlock();
+        fs->toggleBitInBitmap(blockIndex, fs->sb->blockMapStartAddress, fs->sb->blockStartAddress - fs->sb->blockMapStartAddress);
         char intArr[sizeof(int32_t)];
-        int32_t blockAddress = this->sb->blockStartAddress + BLOCK_SIZE * blockIndex;
+        int32_t blockAddress = fs->sb->blockStartAddress + BLOCK_SIZE * blockIndex;
         memcpy(intArr, &blockAddress, sizeof(int32_t));
-        this->writeToFS(intArr, sizeof(int32_t), indirectBlockAddress + i * sizeof(int32_t));
+        fs->writeToFS(intArr, sizeof(int32_t), indirectBlockAddress + i * sizeof(int32_t));
         char blockArr[BLOCK_SIZE];
         if (bytesToGo > BLOCK_SIZE)
         {
             fread(blockArr, 1, BLOCK_SIZE, file);
-            this->fillBlock(blockAddress, blockArr, BLOCK_SIZE);
+            fs->fillBlock(blockAddress, blockArr, BLOCK_SIZE);
             bytesToGo -= BLOCK_SIZE;
         }
         else
         {
             fread(blockArr, 1, bytesToGo, file);
-            this->fillBlock(blockAddress, blockArr, bytesToGo);
+            fs->fillBlock(blockAddress, blockArr, bytesToGo);
             return 0;
         }
     }
@@ -40,24 +40,24 @@ int FileSystem::fillIndirect1(int indirectBlockAddress, FILE *file, int bytesToG
     return 1;
 }
 
-int FileSystem::fillIndirect2(int indirect2BlockAddress, FILE *file, int bytesToGo)
+int fillIndirect2(int indirect2BlockAddress, FILE *file, int bytesToGo, FileSystem *fs)
 {
     for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
     {
-        int blockIndex = this->getFreeBlock();
-        this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+        int blockIndex = fs->getFreeBlock();
+        fs->toggleBitInBitmap(blockIndex, fs->sb->blockMapStartAddress, fs->sb->blockStartAddress - fs->sb->blockMapStartAddress);
         char intArr[sizeof(int32_t)];
-        int32_t indirectBlockAddress = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
+        int32_t indirectBlockAddress = fs->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
         memcpy(intArr, &indirectBlockAddress, sizeof(int32_t));
-        this->writeToFS(intArr, sizeof(int32_t), indirect2BlockAddress + i * sizeof(int32_t));
+        fs->writeToFS(intArr, sizeof(int32_t), indirect2BlockAddress + i * sizeof(int32_t));
         if (bytesToGo > (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE)
         {
-            this->fillIndirect1(indirectBlockAddress, file, bytesToGo);
+            fillIndirect1(indirectBlockAddress, file, bytesToGo, fs);
             bytesToGo -= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE;
         }
         else
             {
-                this->fillIndirect1(indirectBlockAddress, file, bytesToGo);
+                fillIndirect1(indirectBlockAddress, file, bytesToGo, fs);
                 return 0;
             }
     }
@@ -98,15 +98,6 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
     // We add two DIs, one pointing to the same inode and one pointing to the parent inode
     if (ind.isDirectory)
     {
-        /*directoryItem diParent = {};
-        directoryItem diSelf = {};
-        memset(&diParent, 0, sizeof(directoryItem));
-        memset(&diSelf, 0, sizeof(directoryItem));
-        memcpy(diParent.itemName, "..", 2);
-        memcpy(diSelf.itemName, ".", 1);
-        diParent.inode = parentInodeAddress;
-        diSelf.inode = inodeAddress;*/
-
         // add parent DI to inode
         char name[8] = {'.', '.', '\0', '\0', '\0', '\0', '\0', '\0'};
         char extension[3] = {'\0', '\0', '\0'};
@@ -232,7 +223,7 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             blockIndex = this->getFreeBlock();
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             ind.indirect1 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
-            this->fillIndirect1(ind.indirect1, file, bytesToGo);
+            fillIndirect1(ind.indirect1, file, bytesToGo, this);
             if (bytesToGo <= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE) {
                 char indArr[sizeof(inode)];
                 memcpy(indArr, &ind, sizeof(inode));
@@ -245,7 +236,7 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             blockIndex = this->getFreeBlock();
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             ind.indirect2 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
-            this->fillIndirect2(ind.indirect2, file, bytesToGo);
+            fillIndirect2(ind.indirect2, file, bytesToGo, this);
 
             char indArr[sizeof(inode)];
             memcpy(indArr, &ind, sizeof(inode));

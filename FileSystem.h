@@ -9,8 +9,8 @@
 
 const int32_t ID_ITEM_FREE = 0;     // i-node is free if it has this as inodeid
 
-const int32_t BYTES_PER_INODE = 256; // there will be 1 i-node per BYTES_PER_INODE bytes in FS
-const int32_t BLOCK_SIZE = 256;      // data block size in bytes
+const int32_t BYTES_PER_INODE = 1024; // there will be 1 i-node per BYTES_PER_INODE bytes in FS
+const int32_t BLOCK_SIZE = 2048;      // data block size in bytes
 const int32_t FS_NAME_LENGTH = 12;
 
 struct superblock {
@@ -87,16 +87,11 @@ public:
 
     int getInodeAddressForPath(std::string path);
 
-private:
     int searchDirect(int address, const char *name);
     int getFreeInode();
     int getFreeBlock();
     int getFreeBlocksNum();
     int getFreeInodesNum();
-
-    int fillIndirect1(int blockAddress, FILE *file, int bytesToGo);
-
-    int fillIndirect2(int blockAddress, FILE *file, int bytesToGo);
 
     int removeFile(std::string path);
 
@@ -111,6 +106,8 @@ private:
     int cat(std::string path);
 
     int moveFile(std::string filePath, std::string newPath);
+
+    int copyFile(std::string sourcePath, std::string destinationPath);
 };
 
 

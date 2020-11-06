@@ -1,5 +1,4 @@
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include "FileSystem.h"
 #include "LibraryMethods.h"
@@ -97,6 +96,22 @@ int FileSystem::processCommand(std::string command)
     {
         if (this->ln(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
+    }
+    else if (splitCommand.at(0) == "cp")    // TODO implement
+    {
+        if (this->copyFile(splitCommand.at(1), splitCommand.at(2)) == 0)
+            std::cout << "OK" << std::endl;
+    }
+    else if (splitCommand.at(0) == "load")
+    {
+        std::ifstream loadFile;
+        loadFile.open(splitCommand.at(1));
+        std::string loadCommand;
+
+        while (std::getline(loadFile, loadCommand))
+            this->processCommand(loadCommand);
+
+        loadFile.close();
     }
     else
         {

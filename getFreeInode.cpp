@@ -25,6 +25,7 @@ int FileSystem::getFreeInode()
     return -1;
 }
 
+// Returns the number of free inodes
 int FileSystem::getFreeInodesNum()
 {
     int bytes = this->sb->inodeStartAddress - this->sb->inodeMapStartAddress;

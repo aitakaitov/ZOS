@@ -1,7 +1,7 @@
 #include <cstring>
 #include "FileSystem.h"
-#include "LibraryMethods.h"
 
+// Removes a dirItem from inode
 void FileSystem::removeDirItemFromInode(const std::string& name, int inodeAddress)
 {
     inode ind = {};

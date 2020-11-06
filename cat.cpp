@@ -2,6 +2,10 @@
 #include <cstring>
 #include "FileSystem.h"
 
+// Writes the contents of a file to the shell, given a path. Does not support directories.
+// 1    = FILE NOT FOUND
+// 2    = NOT A FILE
+// 0    = OK
 int FileSystem::cat(std::string filePath)
 {
     int inodeAddress = this->getInodeAddressForPath(filePath);

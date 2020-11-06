@@ -1,13 +1,13 @@
-//
-// Created by vojtech on 26.10.20.
-//
-
 #include <string>
 #include <vector>
 #include <sstream>
 #include <sys/stat.h>
 #include "LibraryMethods.h"
 
+// Parses a size
+// Size format is (N)*[B|KB|MB|GB]
+// returns the size in bytes
+// or -1, if the format is invalid
 int LibraryMethods::parseFSSize(std::string fsSize)
 {
     if (!isdigit(fsSize[0]))
@@ -58,15 +58,18 @@ int LibraryMethods::parseFSSize(std::string fsSize)
     return fsFizeBytes;
 }
 
+// Toggles a bit in a byte (0 -> 1 or 1 -> 0)
 char LibraryMethods::toggleBit(char byte, int pos) {
     byte ^= 1 << pos;
     return byte;
 }
 
+// returns the value of a bit in a byte
 int LibraryMethods::checkBit(char byte, int pos) {
     return (byte >> pos) & 1U;
 }
 
+// splits a string given a delimiter and returns it
 std::vector<std::string> LibraryMethods::split(const std::string& str, char delim)
 {
     std::istringstream ss(str);
@@ -81,6 +84,7 @@ std::vector<std::string> LibraryMethods::split(const std::string& str, char deli
     return tokens;
 }
 
+// Checks if a file exists
 bool LibraryMethods::fileExists(const std::string& path)
 {
     struct stat buffer{};

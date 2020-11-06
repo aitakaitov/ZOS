@@ -1,6 +1,11 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// Toggles bitIndex-th bit in a bitmap.
+// bitIndex - index of the bit
+// bitmapAddress - where in the FS the bitmap starts
+// bitmapSize - how long the bitmap is (bytes)
+// 0    = OK
 int FileSystem::toggleBitInBitmap(int bitIndex, int bitmapAddress, int bitmapSize)
 {
     char map[bitmapSize];

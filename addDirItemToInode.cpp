@@ -1,6 +1,12 @@
 #include <cstring>
 #include "FileSystem.h"
 
+// Adds a directoryItem to a direct reference.
+// Intended to be called by addDirItemToInode.
+// If the block is not allocated, will attempt to do so.
+// -1   = Unable to add the DI - either no free blocks or no free space in the block
+// 0    = DI added to the block
+// >0   = Address of a block, that was allocated
 int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress, int inodeReference)
 {
     // Get the DI ready
@@ -12,6 +18,7 @@ int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress
     char diArr[sizeof(directoryItem)];
     memcpy(diArr, &di, sizeof(directoryItem));
 
+    // If the direct is not initialized yet, get a block and write the DI in it
     if (blockAddress == 0)
     {
         int freeBlockIndex = this->getFreeBlock();
@@ -39,7 +46,12 @@ int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress
         }
 }
 
-// name = file/dir name, extension = file extension, inodeAddress = inode we will place the item in, inodeReference = inode to which the item will point
+// name = file/dir name, 8 bytes long, the unused bytes filled with \0
+// extension = file extension, 3 bytes long, the unused bytes filled with \0
+// inodeAddress = inode we will place the item in
+// inodeReference = inode to which the item will point
+// 0    = OK
+// -1   = NO FREE BLOCKS/FAIL
 int FileSystem::addDirItemToInode(char *name, char *extension, int inodeAddress, int inodeReference)
 {
     // Load the inode

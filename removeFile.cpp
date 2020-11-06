@@ -3,6 +3,11 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// Removes a file, given a path
+// 1    = NOT A FILE
+// 2    = PATH NOT FOUND
+// 3    = FILE NOT FOUND
+// 0    = OK
 int FileSystem::removeFile(std::string path)
 {
     if (path.at(0) == '/' && path.size() == 1)
@@ -54,6 +59,7 @@ int FileSystem::removeFile(std::string path)
     memset(diArr, 0, sizeof(directoryItem));
     this->writeToFS(diArr, sizeof(directoryItem), dirItemAddress);
 
+    // If we've emptied a direct reference in parent inode, we find out which one it was, and set the block as free
     std::vector<directoryItem> dirItems = this->getAllDirItemsFromDirect(parentBlockAddress);
     if (dirItems.empty())
     {
@@ -67,6 +73,7 @@ int FileSystem::removeFile(std::string path)
             parentInd.direct5 = 0;
 
         parentInd.fileSize -= BLOCK_SIZE;
+        // decrement the references to parent
         parentInd.references--;
 
         this->toggleBitInBitmap(parentBlockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
@@ -77,6 +84,7 @@ int FileSystem::removeFile(std::string path)
         this->writeToFS(indArr, sizeof(inode), parentInodeAddress);
     }
 
+    // If another DI is pointing to this inode, decrement the number of references and leave - we've already removed the diirectory item
     if (indToRemove.references > 1)
     {
         indToRemove.references--;
@@ -179,30 +187,3 @@ int FileSystem::removeFile(std::string path)
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

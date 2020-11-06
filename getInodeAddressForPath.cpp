@@ -4,6 +4,7 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// Returns an inode's address given a path. Or -1 if the path is invalid
 int FileSystem::getInodeAddressForPath(std::string path)
 {
     const char fslash = '/';

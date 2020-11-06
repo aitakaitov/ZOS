@@ -3,6 +3,9 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// Processes a shell command, calls other methods
+// -1    = exit
+// 0     = otherwise
 int FileSystem::processCommand(std::string command)
 {
     std::vector<std::string> splitCommand;
@@ -11,21 +14,24 @@ int FileSystem::processCommand(std::string command)
     if (splitCommand.empty())
         return 0;
 
-    if (splitCommand.at(0) == "format")
+    if (splitCommand.at(0) == "format")                                                         // FORMAT
     {
         int sizeBytes = LibraryMethods::parseFSSize(splitCommand.at(1));
-        this->createFileSystem(this->sb->name, sizeBytes);
+        if (this->createFileSystem(this->sb->name, sizeBytes) == 0)
+            std::cout << "OK" << std::endl;
+        else
+            return -1;
     }
-    else if (splitCommand.at(0) == "exit")
+    else if (splitCommand.at(0) == "exit")                                                      // EXIT
     {
         return -1;
     }
-    else if (splitCommand.at(0) == "mkdir")
+    else if (splitCommand.at(0) == "mkdir")                                                     // MKDIR
     {
         if (this->createDirectoryItem(splitCommand.at(1), true) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "ls")
+    else if (splitCommand.at(0) == "ls")                                                        // LS
     {
         if (splitCommand.size() == 1)
         {
@@ -37,17 +43,17 @@ int FileSystem::processCommand(std::string command)
                 this->list(inodeAddress);
             }
     }
-    else if (splitCommand.at(0) == "rmdir")
+    else if (splitCommand.at(0) == "rmdir")                                                     // RMDIR
     {
         if (this->removeDirectory(splitCommand.at(1)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "rm")
+    else if (splitCommand.at(0) == "rm")                                                        // RM
     {
         if (this->removeFile(splitCommand.at(1)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "incp")
+    else if (splitCommand.at(0) == "incp")                                                      // INCP
     {
         FILE *file = fopen(splitCommand.at(1).c_str(), "r");
         if (file == NULL)
@@ -58,62 +64,69 @@ int FileSystem::processCommand(std::string command)
         if (this->createDirectoryItem(splitCommand.at(2), false, file) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "outcp")
+    else if (splitCommand.at(0) == "outcp")                                                     // OUTCP
     {
         if (this->outcp(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "freeb")
+    else if (splitCommand.at(0) == "freeb")                                                     // FREEB (get free blocks count)
     {
         std::cout << this->getFreeBlocksNum() << std::endl;
     }
-    else if (splitCommand.at(0) == "freei")
+    else if (splitCommand.at(0) == "freei")                                                     // FREEI (get fre inodes count)
     {
         std::cout << this->getFreeInodesNum() << std::endl;
     }
-    else if (splitCommand.at(0) == "cd")
+    else if (splitCommand.at(0) == "cd")                                                        // CD
     {
         this->cd(splitCommand.at(1));
     }
-    else if (splitCommand.at(0) == "pwd")
+    else if (splitCommand.at(0) == "pwd")                                                       // PWD
     {
         std::cout << this->currentPath << std::endl;
     }
-    else if (splitCommand.at(0) == "info")
+    else if (splitCommand.at(0) == "info")                                                      // INFO
     {
         this->info(splitCommand.at(1));
     }
-    else if (splitCommand.at(0) == "cat")
+    else if (splitCommand.at(0) == "cat")                                                       // CAT
     {
         this->cat(splitCommand.at(1));
     }
-    else if (splitCommand.at(0) == "mv")
+    else if (splitCommand.at(0) == "mv")                                                        // MV
     {
         if (this->moveFile(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "ln")
+    else if (splitCommand.at(0) == "ln")                                                        // LN
     {
         if (this->ln(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "cp")    // TODO implement
+    else if (splitCommand.at(0) == "cp")                                                        // CP
     {
         if (this->copyFile(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "load")
+    else if (splitCommand.at(0) == "load")                                                      // LOAD
     {
         std::ifstream loadFile;
         loadFile.open(splitCommand.at(1));
-        std::string loadCommand;
 
+        if (loadFile.fail())
+        {
+            std::cout << "FILE NOT FOUND" << std::endl;
+            return 0;
+        }
+
+        std::string loadCommand;
         while (std::getline(loadFile, loadCommand))
             this->processCommand(loadCommand);
 
         loadFile.close();
+        std::cout << "OK" << std::endl;
     }
-    else
+    else                                                                                            // DEFAULT
         {
             std::cout << "INVALID COMMAND" << std::endl;
         }
@@ -121,6 +134,8 @@ int FileSystem::processCommand(std::string command)
     return 0;
 }
 
+// The main shell loop. Takes commands from CLI and calls the method, processing them.
+// 0    = exit
 int FileSystem::commandLineLoop() {
     this->currentInodeAddress = this->sb->inodeStartAddress;
     this->currentPath = "/";

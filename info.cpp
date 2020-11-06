@@ -3,6 +3,9 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// Writes info about an inode (file/dir) given a path
+// 0    = OK
+// 1    = FILE NOT FOUND
 int FileSystem::info(std::string path)
 {
     std::string name;
@@ -47,11 +50,13 @@ int FileSystem::info(std::string path)
     memcpy(cName, di.itemName, 8);
     memcpy(cExtension, di.itemName + 8, 3);
 
+    // TODO direct blocks, indirect1 blocks and indirect2 blocks
+
     std::cout << cName;
     if (strcmp(cExtension, "") != 0)
         std::cout << "." << cExtension;
 
-    std::cout << " - " << targetInd.fileSize << " - " << targetInd.nodeid << " - " << std::to_string(targetInd.references) << std::endl;
+    std::cout << " - " << targetInd.fileSize << " - " << targetInd.nodeid << std::endl;
 
     return 0;
 }

@@ -2,6 +2,10 @@
 #include <iostream>
 #include "FileSystem.h"
 
+// Fills block with bytes, given a block address (in fs)
+// expects the bytes not NULL
+// expects the length <= BLOCK_SIZE
+// 0    = OK
 int FileSystem::fillBlock(int blockAddress, char *bytes, int length)
 {
     char blockArr[BLOCK_SIZE];
@@ -12,10 +16,15 @@ int FileSystem::fillBlock(int blockAddress, char *bytes, int length)
     return 0;
 }
 
+// Fills an indirect1 block address with bytes from a FILE*. Expects all args not NULL.
+// Intended to be used by createInode().
+// 0    = OK
 int fillIndirect1(int indirectBlockAddress, FILE *file, int bytesToGo, FileSystem *fs)
 {
+    // Loop trough all the direct addresses in the indirect1 block.
     for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
     {
+        // Allocate new block
         int blockIndex = fs->getFreeBlock();
         fs->toggleBitInBitmap(blockIndex, fs->sb->blockMapStartAddress, fs->sb->blockStartAddress - fs->sb->blockMapStartAddress);
         char intArr[sizeof(int32_t)];
@@ -23,6 +32,8 @@ int fillIndirect1(int indirectBlockAddress, FILE *file, int bytesToGo, FileSyste
         memcpy(intArr, &blockAddress, sizeof(int32_t));
         fs->writeToFS(intArr, sizeof(int32_t), indirectBlockAddress + i * sizeof(int32_t));
         char blockArr[BLOCK_SIZE];
+
+        // If this block is not the last one
         if (bytesToGo > BLOCK_SIZE)
         {
             fread(blockArr, 1, BLOCK_SIZE, file);
@@ -31,25 +42,33 @@ int fillIndirect1(int indirectBlockAddress, FILE *file, int bytesToGo, FileSyste
         }
         else
         {
+            // Otherwise don't copy a whole block
             fread(blockArr, 1, bytesToGo, file);
             fs->fillBlock(blockAddress, blockArr, bytesToGo);
             return 0;
         }
     }
 
-    return 1;
+    return 0;
 }
 
+// Fills an indirect2 block with bytes from a FILE*. Expects all args not NULL.
+// Intended to be used by createInode().
+// 0    = OK
 int fillIndirect2(int indirect2BlockAddress, FILE *file, int bytesToGo, FileSystem *fs)
 {
+    // Loop trough all the addresses
     for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
     {
+        // Allocate an indirect1 block
         int blockIndex = fs->getFreeBlock();
         fs->toggleBitInBitmap(blockIndex, fs->sb->blockMapStartAddress, fs->sb->blockStartAddress - fs->sb->blockMapStartAddress);
         char intArr[sizeof(int32_t)];
         int32_t indirectBlockAddress = fs->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
         memcpy(intArr, &indirectBlockAddress, sizeof(int32_t));
         fs->writeToFS(intArr, sizeof(int32_t), indirect2BlockAddress + i * sizeof(int32_t));
+
+        // Fill the indirect1 with data
         if (bytesToGo > (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE)
         {
             fillIndirect1(indirectBlockAddress, file, bytesToGo, fs);
@@ -65,6 +84,16 @@ int fillIndirect2(int indirect2BlockAddress, FILE *file, int bytesToGo, FileSyst
     return 0;
 }
 
+// Creates and inode, either directory or a file.
+// Expects the calling method to allocate the inode in the bitmap and un-allocate it in case of failure.
+// Expects the calling method to allocate a block in the bitmap. The un-allocation in case of failure is handled by this method.
+// parentInodeAddress is a FS address of the inode, in which the directoryItem, pointing to the new inode, has been placed
+// If the FILE* file is NULL, method will create a directory. Otherwise method will create a file wth data from the FILE*.
+// The FILE* is expected to be opened if not NULL. Method will not close it in case of failure.
+// 0    = OK
+// 1    = NO FREE BLOCKS
+// 2    = FILE TOO LARGE
+// 3    = NOT ENOUGH FREE BLOCKS
 int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddress, FILE *file)
 {
     inode ind = {};
@@ -153,7 +182,7 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
                     if (temp > referencesPerBlock * referencesPerBlock)
                     {
                         std::cout << "FILE TOO LARGE" << std::endl;
-                        return 1;
+                        return 2;
                     }
                     else
                         {
@@ -177,9 +206,10 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             if (freeBlocks < blocksNecessary)
             {
                 std::cout << "NOT ENOUGH FREE BLOCKS" << std::endl;
-                return 1;
+                return 3;
             }
 
+            // Fill the directs with data
             int i = 0;
             int bytesToGo = ind.fileSize;
             int directs[5] = {ind.direct1, ind.direct2, ind.direct3, ind.direct4, ind.direct5};
@@ -220,6 +250,7 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             ind.direct4 = directs[3];
             ind.direct5 = directs[4];
 
+            // Fill indirect1 with data
             blockIndex = this->getFreeBlock();
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             ind.indirect1 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
@@ -233,11 +264,13 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             else
                 bytesToGo -= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE;
 
+            // Fill indirect2 with data
             blockIndex = this->getFreeBlock();
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             ind.indirect2 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
             fillIndirect2(ind.indirect2, file, bytesToGo, this);
 
+            // Write the inode to FS
             char indArr[sizeof(inode)];
             memcpy(indArr, &ind, sizeof(inode));
             this->writeToFS(indArr, sizeof(inode), inodeAddress);

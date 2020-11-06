@@ -2,6 +2,9 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// searches a directly referenced block for a diritem
+// >0   = DI ADDRESS
+// -1   = NOT FOUND
 int FileSystem::searchDirect(int address, const char *name)
 {
     int dirItemsInBlock = BLOCK_SIZE / sizeof(directoryItem);
@@ -19,8 +22,10 @@ int FileSystem::searchDirect(int address, const char *name)
     return -1;
 }
 
-
-// returns directoryItem address, -1 if not found
+// Finds a directory item in an inode
+// The name is expected to be unformatted, the method handles the conversion into FS name format.
+// >0   = DI ADDRESS
+// -1   = NOT FOUND
 int FileSystem::findDirItemInInode(const std::string& name, inode ind)
 {
     char itemName[12];
@@ -78,16 +83,6 @@ int FileSystem::findDirItemInInode(const std::string& name, inode ind)
         address = searchDirect(ind.direct5, itemName);
     if (address != -1)
         return address;
-
-    /*if (ind.indirect1 != 0)
-        address = searchIndirect1(ind.indirect1, name);
-    if (address != -1)
-        return address;
-
-    if (ind.indirect2 != 0)
-        address = searchIndirect2(ind.indirect2, name);
-    if (address != -1)
-        return address;*/
 
     return -1;
 }

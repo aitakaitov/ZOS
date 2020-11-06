@@ -1,6 +1,9 @@
 #include <cstring>
 #include "FileSystem.h"
 
+// Finds a directoryItem in a directly referenced block, given an address the DI is pointing to
+// >0   = DI ADDRESS
+// -1   = NOT FOUND
 int searchDirectAddress(int blockAddress, int targetAddress, FileSystem *fs)
 {
     int dirItemsInBlock = BLOCK_SIZE / sizeof(directoryItem);
@@ -18,6 +21,9 @@ int searchDirectAddress(int blockAddress, int targetAddress, FileSystem *fs)
     return -1;
 }
 
+// Finds a directoryItem in an inode, given an inode address the DI is pointing to
+// >0   = DI ADDRESS
+// -1   = NOT FOUND
 int findDirItemInInodeByInodeAddress(int inodeAddress, inode ind, FileSystem *fs)
 {
     int address = -1;
@@ -49,7 +55,9 @@ int findDirItemInInodeByInodeAddress(int inodeAddress, inode ind, FileSystem *fs
     return -1;
 }
 
-
+// Returns an absolute path to an inode, given it's address
+// Expects the address to be a valid inode address
+// Backtracks using .. files until it reaches root, where is no .. file
 std::string FileSystem::getAbsolutePathToInode(int address)
 {
     if (address == this->sb->inodeStartAddress)

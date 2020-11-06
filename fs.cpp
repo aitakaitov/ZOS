@@ -2,7 +2,7 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
-
+// Main file of the application
 int main(int argc, char** argv) {
 
     if (argc != 2)
@@ -13,6 +13,7 @@ int main(int argc, char** argv) {
 
     std::string fsName = argv[1];
 
+    // Load the filesystem
     if (LibraryMethods::fileExists(fsName))
     {
         std::cout << "File exists, attempting to load file system" << std::endl;
@@ -23,7 +24,7 @@ int main(int argc, char** argv) {
         }
         fs.commandLineLoop();
     }
-    else
+    else    // Create a new filesystem
         {
             std::string formatCommand;
             getline(std::cin, formatCommand);
@@ -35,6 +36,7 @@ int main(int argc, char** argv) {
                 if (fs.createFileSystem(fsName, fsSizeBytes) != 0) {
                     return 1;
                 }
+                std::cout << "OK" << std::endl;
                 fs.commandLineLoop();
             }
         }

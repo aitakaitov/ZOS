@@ -3,6 +3,9 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// Creates a new filesystem given a name, and a size
+// 1    = ERR
+// 0    = OK
 int FileSystem::createFileSystem(std::string path, int sizeBytes) {
     this->fsFile.close();
     remove(path.c_str());
@@ -18,8 +21,6 @@ int FileSystem::createFileSystem(std::string path, int sizeBytes) {
         std::cout << "CANNOT CREATE FILE" << std::endl;
         return 1;
     }
-
-    std::cout << "OK" << std::endl;
 
     for (int i = 0; i < sizeBytes; i++) {
         this->fsFile.write("\0", sizeof(char));
@@ -63,9 +64,9 @@ int FileSystem::createFileSystem(std::string path, int sizeBytes) {
     memset(&sb->name, 0, FS_NAME_LENGTH);
     memcpy(&sb->name, &path[0], path.size());
 
-    std::cout << "size: " << sb->diskSize << std::endl << "Superblock start: 0\nInode map start: " << inodeMapStartAddress << "\nInode start address: " << inodeStartAddress << std::endl;
-    std::cout << "Block map start: " << blockMapStartAddress << "\nBlock start address: " << blockStartAddress << "\nBlock end address: " << blockStartAddress + blockCount * BLOCK_SIZE << std::endl;
-    std::cout << "Block count: " << blockCount << "(block size = " << BLOCK_SIZE << ")" << std::endl << "Inode count: " << inodeCount << "(inode size = " << sizeof(inode) << ")" << std::endl;
+    //std::cout << "size: " << sb->diskSize << std::endl << "Superblock start: 0\nInode map start: " << inodeMapStartAddress << "\nInode start address: " << inodeStartAddress << std::endl;
+    //std::cout << "Block map start: " << blockMapStartAddress << "\nBlock start address: " << blockStartAddress << "\nBlock end address: " << blockStartAddress + blockCount * BLOCK_SIZE << std::endl;
+    //std::cout << "Block count: " << blockCount << "(block size = " << BLOCK_SIZE << ")" << std::endl << "Inode count: " << inodeCount << "(inode size = " << sizeof(inode) << ")" << std::endl;
 
     char superblockCharArr[sizeof(superblock)];
     memset(superblockCharArr, 0, sizeof(superblock));
@@ -76,7 +77,11 @@ int FileSystem::createFileSystem(std::string path, int sizeBytes) {
     return 0;
 }
 
-int FileSystem::loadFileSystem(std::string path) {
+// Loads a filesystem from a file, given a path
+// 1    = ERR
+// 0    = OK
+int FileSystem::loadFileSystem(std::string path)
+{
     this->fsFile.open(path, std::ios::out | std::ios::in | std::ios::binary);
 
     if (!FileSystem::fsFile)
@@ -96,6 +101,8 @@ int FileSystem::loadFileSystem(std::string path) {
     return 0;
 }
 
+// Creates the root directory
+// 0    = OK
 int FileSystem::createRoot()
 {
     int inodeAddress = this->sb->inodeStartAddress;

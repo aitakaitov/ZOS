@@ -6,6 +6,7 @@
 // Copies contents of indirect1 to another inode's indirect1. Expects the two files we are copying have the same size,
 // no checks are performed for 0-only addresses, it relies solely on file size to know, when to stop.
 // Intended for use with copyFile
+// 0    = OK
 int fillIndirect1(int indirectBlockAddress, int indirectSourceBlockAddress, int bytesToGo, FileSystem *fs)
 {
     char blockArr[BLOCK_SIZE];
@@ -39,12 +40,13 @@ int fillIndirect1(int indirectBlockAddress, int indirectSourceBlockAddress, int 
         }
     }
 
-    return 1;
+    return 0;
 }
 
 // Copies contents of indirect2 to another inode's indirect2. Expects the two files we are copying have the same size,
 // no checks are performed for 0-only addresses, it relies solely on file size to know, when to stop.
 // Intended for use with copyFile
+// 0    = OK
 int fillIndirect2(int indirect2BlockAddress, int indirect2SourceBlockAddress, int bytesToGo, FileSystem *fs)
 {
     // Loop trough all the addresses
@@ -81,6 +83,14 @@ int fillIndirect2(int indirect2BlockAddress, int indirect2SourceBlockAddress, in
 // sourcePath must exist
 // destinationPath must exist up to the new file name, in the parent folder a file with the same name must not exist
 // method checks for free blocks and free inodes
+// 0    = OK
+// 1    = FILE NOT FOUND (source) / NOT A FILE (source)
+// 2    = PATH NOT FOUND (dest)
+// 3    = EXIST (in the destination directory a file with the same name exists)
+// 4    = NO FREE INODES
+// 5    = MAX ITEMS IN DIRECTORY (or NO FREE BLOCKS)
+// 6    = NOT ENOUGH FREE BLOCKS
+// 7    = FILE TOO LARGE FOR THE FS
 int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
 {
     // Check if the source exists
@@ -181,7 +191,7 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
             {
                 this->removeDirItemFromInode(destinationFileName, destParentInodeAddr);
                 std::cout << "FILE TOO LARGE" << std::endl;
-                return 1;
+                return 7;
             }
             else
             {

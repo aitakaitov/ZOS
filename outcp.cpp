@@ -2,8 +2,13 @@
 #include <cstring>
 #include "FileSystem.h"
 
+// Copies the file in filePath to outputPath (outside of FS)
+// 1    = FILE COULD NOT BE CREATED
+// 2    = FILE DOES NOT EXIST
+// 0    = OK
 int FileSystem::outcp(std::string filePath, const std::string& outputPath)
 {
+    // Create the file outside of FS
     FILE *file = fopen(outputPath.c_str(), "w");
     if (file == NULL)
     {
@@ -11,9 +16,9 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
         fclose(file);
         return 1;
     }
-
     rewind(file);
 
+    // Check if file exists
     int inodeAddress = this->getInodeAddressForPath(filePath);
     if (inodeAddress == -1)
     {
@@ -27,6 +32,7 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
     this->readFromFS(indArr, sizeof(inode), inodeAddress);
     memcpy(&ind, indArr, sizeof(inode));
 
+    // Loop trough directs
     char blockArr[BLOCK_SIZE];
     if (ind.direct1 != 0)
     {
@@ -54,6 +60,7 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
         fwrite(blockArr, 1, BLOCK_SIZE, file);
     }
 
+    // Loop trough indirect1
     if (ind.indirect1 != 0)
     {
         char indirect1Block[BLOCK_SIZE];
@@ -70,6 +77,7 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
         }
     }
 
+    // Loop trough indirect2
     if (ind.indirect2 != 0)
     {
         char indirect2Block[BLOCK_SIZE];

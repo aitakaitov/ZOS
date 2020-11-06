@@ -1,8 +1,10 @@
 #include <iostream>
-#include <cstring>
 #include "FileSystem.h"
-#include "LibraryMethods.h"
 
+// Moves a file from filePath to newPath
+// Essentially creates a hardlink and removes the old file
+// 0    = OK
+// 1    = ERR
 int FileSystem::moveFile(std::string filePath, std::string newPath)
 {
     if (this->ln(filePath, newPath) == 0)

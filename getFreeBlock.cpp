@@ -1,6 +1,7 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// Returns the first free block's index or -1, if no free blocks are available
 int FileSystem::getFreeBlock()
 {
     int bytes = this->sb->blockStartAddress - this->sb->blockMapStartAddress;
@@ -23,6 +24,7 @@ int FileSystem::getFreeBlock()
     return -1;
 }
 
+// Returns the number of free blocks
 int FileSystem::getFreeBlocksNum()
 {
     int bytes = this->sb->blockStartAddress - this->sb->blockMapStartAddress;

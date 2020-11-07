@@ -7,8 +7,10 @@
 #include <fstream>
 #include <vector>
 
-const int32_t BYTES_PER_INODE = 1024; // there will be 1 i-node per BYTES_PER_INODE bytes in FS
-const int32_t BLOCK_SIZE = 2048;      // data block size in bytes
+const int32_t ID_ITEM_FREE = 0;     // i-node is free if it has this as inodeid
+
+const int32_t BYTES_PER_INODE = 128; // there will be 1 i-node per BYTES_PER_INODE bytes in FS
+const int32_t BLOCK_SIZE = 60;      // data block size in bytes
 const int32_t FS_NAME_LENGTH = 12;
 
 struct superblock {
@@ -16,7 +18,7 @@ struct superblock {
     int32_t diskSize;              // total FS size in bytes                                                          // |       SUPERBLOCK       |     44 bytes
     int32_t blockSize;             // data block size in bytes                                                        // +------------------------+
     int32_t blockCount;            // data block count                                                                // |     INODE BITMAP       |     1 bit per inode
-    int32_t inodeCount;            // number of inodes                                                                // +------------------------+
+    int32_t inodeCount;                                                                                               // +------------------------+
     int32_t inodeMapStartAddress;  // i-node bitmap start address                                                     // |         INODES         |     40 bytes per inode
     int32_t blockMapStartAddress;  // data block bitmap start address                                                 // +------------------------+
     int32_t inodeStartAddress;     // i-node start address                                                            // |      BLOCK BITMAP      |     1 bit per block
@@ -26,7 +28,7 @@ struct superblock {
 
 struct inode {
     int32_t nodeid;                 // i-node ID, free i-node has nodeid == ID_ITEM_FREE
-    bool isDirectory;               // is a directory?
+    bool isDirectory;
     int8_t references;              // number of references to the i-node
     int32_t fileSize;               // file size in bytes
     int32_t direct1;                // direct references to data blocks
@@ -46,10 +48,10 @@ struct directoryItem {
 
 class FileSystem {
 public:
-    superblock *sb;                 // superblock structure
-    std::fstream fsFile;            // file with the filesystem
-    std::string currentPath = "/";  // out current path as a string
-    int currentInodeAddress;        // the current inode's address in FS
+    superblock *sb;
+    std::fstream fsFile;
+    std::string currentPath = "/";
+    int currentInodeAddress;
 
     // fsIO.cpp
     int writeToFS(char *bytes, int length, int32_t address);
@@ -64,71 +66,52 @@ public:
     int commandLineLoop();
     int processCommand(std::string command);
 
-    // createDirectoryItem.cpp
+
     int createDirectoryItem(std::string path, bool isDirectory, FILE *file = NULL);
-
-    // list.cpp
-    int list(int inodeAddress);
     std::vector<directoryItem> getAllDirItemsFromDirect(int blockAddress);
-
-    // removeDirectory.cpp
     int removeDirectory(std::string path);
-
-    // findDirItemInInode.cpp
     int findDirItemInInode(const std::string& name, inode ind);
-    int searchDirect(int address, const char *name);
-
-    // addDirItemToInode.cpp
     int addDirItemToInode(char *name, char *extension, int inodeAddress, int inodeReference);
     int addDirItemToDirect(char *name, char *extension, int blockAddress, int inodeReference);
-
-    // removeDirItemFromInode.cpp
     void removeDirItemFromInode(const std::string& name, int inodeAddress);
 
-    // createInode.cpp
     int createInode(int inodeIndex, int blockIndex, int parentInodeAddress, FILE *bytes);
     int fillBlock(int blockAddress, char *bytes, int length);
 
     // bitmapOperations.cpp
     int toggleBitInBitmap(int bitIndex, int bitmapAddress, int bitmapSize);
 
-    // ln.cpp
+    int list(int inodeAddress);
+
     int ln(std::string pathToFile, std::string pathToLink);
 
-    // getInodeAddressForPath.cpp
     int getInodeAddressForPath(std::string path);
 
-    // getFreeInode.cpp
+    int searchDirect(int address, const char *name);
     int getFreeInode();
-    int getFreeInodesNum();
-
-    // getFreeBlock.cpp
     int getFreeBlock();
     int getFreeBlocksNum();
+    int getFreeInodesNum();
 
-    // removeFile.cpp
     int removeFile(std::string path);
 
-    // outcp.cpp
     int outcp(std::string filePath, const std::string& outputPath);
 
-    // cd.cpp
     int cd(std::string path);
 
-    // getAbsolutePathToInode.cpp
     std::string getAbsolutePathToInode(int inodeAddress);
 
-    // info.cpp
     int info(std::string path);
 
-    // cat.cpp
     int cat(std::string path);
 
-    // moveFile.cpp
     int moveFile(std::string filePath, std::string newPath);
 
-    // copyFile.cpp
     int copyFile(std::string sourcePath, std::string destinationPath);
+
+    int fillDirectWithDI(int blockAddress, std::vector<directoryItem> &dirItems);
+
+    int defragmentDirects(inode &ind);
 };
 
 

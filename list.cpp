@@ -22,6 +22,8 @@ std::vector<directoryItem> FileSystem::getAllDirItemsFromDirect(int blockAddress
 }
 
 // Lists all the files/dirs in a directory, given an inode address
+// 0    = OK
+// 1    = NOT A DIRECTORY
 int FileSystem::list(int inodeAddress)
 {
     // Load the inode
@@ -30,7 +32,6 @@ int FileSystem::list(int inodeAddress)
     this->readFromFS(inodeArr, sizeof(inode), inodeAddress);
     memcpy(&ind, inodeArr, sizeof(inode));
 
-    // Check
     if (!ind.isDirectory)
     {
         std::cout << "NOT A DIRECTORY" << std::endl;
@@ -40,7 +41,6 @@ int FileSystem::list(int inodeAddress)
     std::vector<directoryItem> directoryItems;
     std::vector<directoryItem> partialResult;
 
-    // Collect all the directoryItems
     partialResult = getAllDirItemsFromDirect(ind.direct1);
     for (auto di : partialResult)
         directoryItems.emplace_back(di);
@@ -73,7 +73,6 @@ int FileSystem::list(int inodeAddress)
             directoryItems.emplace_back(di);
     }
 
-    // Print them out
     for (auto di : directoryItems)
     {
         inode diInode = {};

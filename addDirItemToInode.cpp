@@ -40,9 +40,7 @@ int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress
                 return 0;
             }
             else
-                {
-                    return -1;
-                }
+                return -1;
         }
 }
 

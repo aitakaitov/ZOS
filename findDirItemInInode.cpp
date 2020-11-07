@@ -22,6 +22,7 @@ int FileSystem::searchDirect(int address, const char *name)
     return -1;
 }
 
+
 // Finds a directory item in an inode
 // The name is expected to be unformatted, the method handles the conversion into FS name format.
 // >0   = DI ADDRESS

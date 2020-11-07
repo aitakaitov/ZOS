@@ -64,9 +64,9 @@ int FileSystem::createFileSystem(std::string path, int sizeBytes) {
     memset(&sb->name, 0, FS_NAME_LENGTH);
     memcpy(&sb->name, &path[0], path.size());
 
-    //std::cout << "size: " << sb->diskSize << std::endl << "Superblock start: 0\nInode map start: " << inodeMapStartAddress << "\nInode start address: " << inodeStartAddress << std::endl;
-    //std::cout << "Block map start: " << blockMapStartAddress << "\nBlock start address: " << blockStartAddress << "\nBlock end address: " << blockStartAddress + blockCount * BLOCK_SIZE << std::endl;
-    //std::cout << "Block count: " << blockCount << "(block size = " << BLOCK_SIZE << ")" << std::endl << "Inode count: " << inodeCount << "(inode size = " << sizeof(inode) << ")" << std::endl;
+    std::cout << "size: " << sb->diskSize << std::endl << "Superblock start: 0\nInode map start: " << inodeMapStartAddress << "\nInode start address: " << inodeStartAddress << std::endl;
+    std::cout << "Block map start: " << blockMapStartAddress << "\nBlock start address: " << blockStartAddress << "\nBlock end address: " << blockStartAddress + blockCount * BLOCK_SIZE << std::endl;
+    std::cout << "Block count: " << blockCount << "(block size = " << BLOCK_SIZE << ")" << std::endl << "Inode count: " << inodeCount << "(inode size = " << sizeof(inode) << ")" << std::endl;
 
     char superblockCharArr[sizeof(superblock)];
     memset(superblockCharArr, 0, sizeof(superblock));
@@ -80,8 +80,7 @@ int FileSystem::createFileSystem(std::string path, int sizeBytes) {
 // Loads a filesystem from a file, given a path
 // 1    = ERR
 // 0    = OK
-int FileSystem::loadFileSystem(std::string path)
-{
+int FileSystem::loadFileSystem(std::string path) {
     this->fsFile.open(path, std::ios::out | std::ios::in | std::ios::binary);
 
     if (!FileSystem::fsFile)
@@ -95,8 +94,6 @@ int FileSystem::loadFileSystem(std::string path)
     this->readFromFS(superblockCharArr, sizeof(superblock), 0);
     this->sb = new superblock {0,0,0,0,0,0,0};
     memcpy(this->sb, superblockCharArr, sizeof(superblock));
-
-    std::cout << "OK" << std::endl;
 
     return 0;
 }

@@ -108,7 +108,7 @@ int FileSystem::removeDirectory(std::string path)
         if (!dirItems.empty())
         {
             std::cout << "NOT EMPTY" << std::endl;
-            return 3;
+            return 4;
         }
     }
 
@@ -141,10 +141,16 @@ int FileSystem::removeDirectory(std::string path)
 
     // Check if the direct block in parent contains any other diritems, if not, set it as available
     // TODO there could be error is this logic, check for bugs
-    int blockIndex = (dirItemAddress - this->sb->blockStartAddress) / BLOCK_SIZE;
+    /*int blockIndex = (dirItemAddress - this->sb->blockStartAddress) / BLOCK_SIZE;
     int blockAddress = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
-    dirItems = getAllDirItemsFromDirect(blockAddress);
-    if (dirItems.empty())
+    dirItems = getAllDirItemsFromDirect(blockAddress);*/
+
+    this->defragmentDirects(parentInd);
+
+    memcpy(indArr, &parentInd, sizeof(inode));
+    this->writeToFS(indArr, sizeof(inode), parentInodeAddress);
+
+    /*if (dirItems.empty())
     {
         // We dont need to check direct1, as we will set it as available only when the directory gets deleted.
         if (parentInd.direct2 == blockAddress)
@@ -164,7 +170,7 @@ int FileSystem::removeDirectory(std::string path)
         this->writeToFS(blockArr, BLOCK_SIZE, blockAddress);
         memcpy(indArr, &parentInd, sizeof(inode));
         this->writeToFS(indArr, sizeof(inode), parentInodeAddress);
-    }
+    }*/
 
     return 0;
 }

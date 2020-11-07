@@ -18,7 +18,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
 {
     if (isDirectory && path.find('.') != std::string::npos)
     {
-        std::cout << ". IN DIR NAME NOT ALLOWED" << std::endl;
+        std::cout << ". NOT ALLOWED IN DIR NAME" << std::endl;
         return 6;
     }
 
@@ -60,7 +60,6 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
             std::cout << "EXIST" << std::endl;
             return 1;
         }
-
         // We need inode to represent the item
         int inodeIndex = this->getFreeInode();
         if (inodeIndex == -1)
@@ -68,7 +67,6 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
             std::cout << "NO FREE INODE" << std::endl;
             return 2;
         }
-
         // We need a block for the inode.direct1
         int blockIndex = this->getFreeBlock();
         if (blockIndex == -1)
@@ -76,12 +74,10 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
             std::cout << "NO FREE BLOCK" << std::endl;
             return 3;
         }
-
         // Reserve a block for the new inode
+        this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         // We need to add a directory item to the parent inode, which could require another block,
         // in case the ones allocated are full
-        this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-
         std::vector<std::string> splitName = LibraryMethods::split(splitPath.at(0), '.');
         char name[8];
         memset(name, 0, 8);
@@ -91,9 +87,6 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
         memset(extension, 0, 3);
         if (splitName.size() == 2)
             memcpy(extension, splitName.at(1).c_str(), splitName.at(1).size());
-
-        if (isDirectory)
-            memset(extension, 0, 3);
 
         int res = this->addDirItemToInode(name, extension, inodeAddress, this->sb->inodeStartAddress + inodeIndex * sizeof(inode));
         // If there is no space to allocate the DI, un-reserve the block
@@ -107,7 +100,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
         if (isDirectory)
         {
             res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL);
-            // If we are unsuccessful, remove the added dirItem
+            // If we are unsuccessful in creating the inode, we un-allocate the block
             if (res != 0)
             {
                 this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
@@ -124,7 +117,6 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 res = this->createInode(inodeIndex, blockIndex, 0, file);
                 if (res != 0)
                 {
-                    //this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
                     this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
                     return -1;
                 }
@@ -146,7 +138,6 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 std::cout << "PATH NOT FOUND" << std::endl;
                 return 5;
             }
-
             char indArr[sizeof(inode)];
             this->readFromFS(indArr, sizeof(inode), inodeAddress);
             memcpy(&ind, indArr, sizeof(inode));
@@ -157,7 +148,6 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 std::cout << "EXIST" << std::endl;
                 return 1;
             }
-
             // We need inode to represent the item
             int inodeIndex = this->getFreeInode();
             if (inodeIndex == -1)
@@ -165,7 +155,6 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 std::cout << "NO FREE INODE" << std::endl;
                 return 2;
             }
-
             // We need a block for the inode.direct1
             int blockIndex = this->getFreeBlock();
             if (blockIndex == -1)
@@ -173,12 +162,10 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 std::cout << "NO FREE BLOCK" << std::endl;
                 return 3;
             }
-
             // Reserve a block for the new inode
+            this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             // We need to add a directory item to the parent inode, which could require another block,
             // in case the ones allocated are full
-            this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-
             std::vector<std::string> splitName = LibraryMethods::split(splitPath.at(splitPath.size() - 1), '.');
             char name[8];
             memset(name, 0, 8);
@@ -189,11 +176,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
             if (splitName.size() == 2)
                 memcpy(extension, splitName.at(1).c_str(), splitName.at(1).size());
 
-            if (isDirectory)
-                memset(extension, 0, 3);
-
             int res = this->addDirItemToInode(name, extension, inodeAddress, this->sb->inodeStartAddress + inodeIndex * sizeof(inode));
-
             // If there is no space to allocate the DI, un-reserve the block
             if (res != 0)
             {
@@ -231,6 +214,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                     return 0;
                 }
             }
+
         }
 
     return 0;

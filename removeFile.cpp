@@ -3,6 +3,127 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+int FileSystem::fillDirectWithDI(int blockAddress, std::vector<directoryItem> &dirItems)
+{
+    int itemsPerBlock = this->sb->blockSize / sizeof(directoryItem);
+
+    char diArr[sizeof(directoryItem)];
+
+    int i;
+    for (i = 0; i < itemsPerBlock; i++)
+    {
+        directoryItem di = dirItems.at(0);
+        memcpy(diArr, &di, sizeof(directoryItem));
+        this->writeToFS(diArr, sizeof(directoryItem), blockAddress + i * sizeof(directoryItem));
+        dirItems.erase(dirItems.begin());
+
+        if (dirItems.empty())
+        {
+            i++;
+            break;
+        }
+
+    }
+
+    memset(diArr, 0, sizeof(directoryItem));
+    for (i; i < itemsPerBlock; i++)
+        this->writeToFS(diArr, sizeof(directoryItem), blockAddress + i * sizeof(directoryItem));
+
+    return 0;
+}
+
+
+int FileSystem::defragmentDirects(inode &ind)
+{
+    int32_t directsBefore[5] = {ind.direct1, ind.direct2, ind.direct3, ind.direct4, ind.direct5};
+
+    std::vector<directoryItem> dirItems;
+
+    if (ind.direct1 != 0)
+        for (auto di : this->getAllDirItemsFromDirect(ind.direct1))
+            dirItems.emplace_back(di);
+
+    if (ind.direct2 != 0)
+        for (auto di : this->getAllDirItemsFromDirect(ind.direct2))
+            dirItems.emplace_back(di);
+
+    if (ind.direct3 != 0)
+        for (auto di : this->getAllDirItemsFromDirect(ind.direct3))
+            dirItems.emplace_back(di);
+
+    if (ind.direct4 != 0)
+        for (auto di : this->getAllDirItemsFromDirect(ind.direct4))
+            dirItems.emplace_back(di);
+
+    if (ind.direct5 != 0)
+        for (auto di : this->getAllDirItemsFromDirect(ind.direct5))
+            dirItems.emplace_back(di);
+
+    int32_t directsAfter[5] = {-1, -1, -1, -1, -1};
+    directsAfter[0] = ind.direct1;
+    this->fillDirectWithDI(ind.direct1, dirItems);
+
+    if (ind.direct2 != 0 && !dirItems.empty())
+    {
+        this->fillDirectWithDI(ind.direct2, dirItems);
+        directsAfter[1] = ind.direct2;
+    }
+    else if (dirItems.empty())
+         directsAfter[1] = 0;
+
+    if (ind.direct3 != 0 && !dirItems.empty())
+    {
+        directsAfter[2] = ind.direct3;
+        this->fillDirectWithDI(ind.direct3, dirItems);
+    }
+    else if (dirItems.empty())
+        directsAfter[2] = 0;
+
+    if (ind.direct4 != 0 && !dirItems.empty())
+    {
+        directsAfter[3] = ind.direct4;
+        this->fillDirectWithDI(ind.direct4, dirItems);
+    }
+    else if (dirItems.empty())
+        directsAfter[3] = 0;
+
+    if (ind.direct5 != 0 && !dirItems.empty())
+    {
+        directsAfter[4] = ind.direct5;
+        this->fillDirectWithDI(ind.direct5, dirItems);
+    }
+    else if (dirItems.empty())
+        directsAfter[4] = 0;
+
+    ind.fileSize = 0;
+
+    for (int i = 0; i < 5; i++)
+    {
+        if (directsBefore[i] != 0 && directsAfter[i] == 0)
+        {
+            int blockIndex = (directsBefore[i] - this->sb->blockMapStartAddress) / this->sb->blockSize;
+            this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress,this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+            char blockArr[this->sb->blockSize];
+            memset(blockArr, 0, this->sb->blockSize);
+            this->writeToFS(blockArr, this->sb->blockSize, this->sb->blockStartAddress + blockIndex * this->sb->blockSize);
+        }
+
+        if (directsBefore[i] != 0 && directsAfter[i] != 0)
+            directsAfter[i] = directsBefore[i];
+
+        if (directsAfter[i] != 0)
+            ind.fileSize += this->sb->blockSize;
+    }
+
+    ind.direct1 = directsAfter[0];
+    ind.direct2 = directsAfter[1];
+    ind.direct3 = directsAfter[2];
+    ind.direct4 = directsAfter[3];
+    ind.direct5 = directsAfter[4];
+
+    return 0;
+}
+
 // Removes a file, given a path
 // 1    = NOT A FILE
 // 2    = PATH NOT FOUND
@@ -59,8 +180,11 @@ int FileSystem::removeFile(std::string path)
     memset(diArr, 0, sizeof(directoryItem));
     this->writeToFS(diArr, sizeof(directoryItem), dirItemAddress);
 
-    // If we've emptied a direct reference in parent inode, we find out which one it was, and set the block as free
-    std::vector<directoryItem> dirItems = this->getAllDirItemsFromDirect(parentBlockAddress);
+    defragmentDirects(parentInd);     // TODO CHECK IF WORKS
+    memcpy(indArr, &parentInd, sizeof(inode));
+    this->writeToFS(indArr, sizeof(inode), parentInodeAddress);
+
+    /*std::vector<directoryItem> dirItems = this->getAllDirItemsFromDirect(parentBlockAddress);
     if (dirItems.empty())
     {
         if (parentInd.direct2 == parentBlockAddress)
@@ -73,8 +197,6 @@ int FileSystem::removeFile(std::string path)
             parentInd.direct5 = 0;
 
         parentInd.fileSize -= BLOCK_SIZE;
-        // decrement the references to parent
-        parentInd.references--;
 
         this->toggleBitInBitmap(parentBlockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         char blockArr[BLOCK_SIZE];
@@ -82,9 +204,8 @@ int FileSystem::removeFile(std::string path)
         this->writeToFS(blockArr, BLOCK_SIZE, parentBlockAddress);
         memcpy(indArr, &parentInd, sizeof(inode));
         this->writeToFS(indArr, sizeof(inode), parentInodeAddress);
-    }
+    }*/
 
-    // If another DI is pointing to this inode, decrement the number of references and leave - we've already removed the diirectory item
     if (indToRemove.references > 1)
     {
         indToRemove.references--;
@@ -187,3 +308,30 @@ int FileSystem::removeFile(std::string path)
 
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

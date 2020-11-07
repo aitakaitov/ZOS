@@ -14,7 +14,7 @@ int FileSystem::processCommand(std::string command)
     if (splitCommand.empty())
         return 0;
 
-    if (splitCommand.at(0) == "format")                                                         // FORMAT
+    if (splitCommand.at(0) == "format")
     {
         int sizeBytes = LibraryMethods::parseFSSize(splitCommand.at(1));
         if (this->createFileSystem(this->sb->name, sizeBytes) == 0)
@@ -22,16 +22,16 @@ int FileSystem::processCommand(std::string command)
         else
             return -1;
     }
-    else if (splitCommand.at(0) == "exit")                                                      // EXIT
+    else if (splitCommand.at(0) == "exit")
     {
         return -1;
     }
-    else if (splitCommand.at(0) == "mkdir")                                                     // MKDIR
+    else if (splitCommand.at(0) == "mkdir")
     {
         if (this->createDirectoryItem(splitCommand.at(1), true) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "ls")                                                        // LS
+    else if (splitCommand.at(0) == "ls")
     {
         if (splitCommand.size() == 1)
         {
@@ -43,17 +43,17 @@ int FileSystem::processCommand(std::string command)
                 this->list(inodeAddress);
             }
     }
-    else if (splitCommand.at(0) == "rmdir")                                                     // RMDIR
+    else if (splitCommand.at(0) == "rmdir")
     {
         if (this->removeDirectory(splitCommand.at(1)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "rm")                                                        // RM
+    else if (splitCommand.at(0) == "rm")
     {
         if (this->removeFile(splitCommand.at(1)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "incp")                                                      // INCP
+    else if (splitCommand.at(0) == "incp")
     {
         FILE *file = fopen(splitCommand.at(1).c_str(), "r");
         if (file == NULL)
@@ -64,51 +64,51 @@ int FileSystem::processCommand(std::string command)
         if (this->createDirectoryItem(splitCommand.at(2), false, file) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "outcp")                                                     // OUTCP
+    else if (splitCommand.at(0) == "outcp")
     {
         if (this->outcp(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "freeb")                                                     // FREEB (get free blocks count)
+    else if (splitCommand.at(0) == "freeb")
     {
         std::cout << this->getFreeBlocksNum() << std::endl;
     }
-    else if (splitCommand.at(0) == "freei")                                                     // FREEI (get fre inodes count)
+    else if (splitCommand.at(0) == "freei")
     {
         std::cout << this->getFreeInodesNum() << std::endl;
     }
-    else if (splitCommand.at(0) == "cd")                                                        // CD
+    else if (splitCommand.at(0) == "cd")
     {
         this->cd(splitCommand.at(1));
     }
-    else if (splitCommand.at(0) == "pwd")                                                       // PWD
+    else if (splitCommand.at(0) == "pwd")
     {
         std::cout << this->currentPath << std::endl;
     }
-    else if (splitCommand.at(0) == "info")                                                      // INFO
+    else if (splitCommand.at(0) == "info")
     {
         this->info(splitCommand.at(1));
     }
-    else if (splitCommand.at(0) == "cat")                                                       // CAT
+    else if (splitCommand.at(0) == "cat")
     {
         this->cat(splitCommand.at(1));
     }
-    else if (splitCommand.at(0) == "mv")                                                        // MV
+    else if (splitCommand.at(0) == "mv")
     {
         if (this->moveFile(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "ln")                                                        // LN
+    else if (splitCommand.at(0) == "ln")
     {
         if (this->ln(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "cp")                                                        // CP
+    else if (splitCommand.at(0) == "cp")
     {
         if (this->copyFile(splitCommand.at(1), splitCommand.at(2)) == 0)
             std::cout << "OK" << std::endl;
     }
-    else if (splitCommand.at(0) == "load")                                                      // LOAD
+    else if (splitCommand.at(0) == "load")
     {
         std::ifstream loadFile;
         loadFile.open(splitCommand.at(1));
@@ -116,7 +116,7 @@ int FileSystem::processCommand(std::string command)
         if (loadFile.fail())
         {
             std::cout << "FILE NOT FOUND" << std::endl;
-            return 0;
+            return 1;
         }
 
         std::string loadCommand;
@@ -124,9 +124,8 @@ int FileSystem::processCommand(std::string command)
             this->processCommand(loadCommand);
 
         loadFile.close();
-        std::cout << "OK" << std::endl;
     }
-    else                                                                                            // DEFAULT
+    else
         {
             std::cout << "INVALID COMMAND" << std::endl;
         }

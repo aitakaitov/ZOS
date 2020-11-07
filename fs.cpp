@@ -13,18 +13,16 @@ int main(int argc, char** argv) {
 
     std::string fsName = argv[1];
 
-    // Load the filesystem
     if (LibraryMethods::fileExists(fsName))
     {
         std::cout << "File exists, attempting to load file system" << std::endl;
         FileSystem fs;
         if (fs.loadFileSystem(fsName) != 0)
-        {
             return 1;
-        }
+
         fs.commandLineLoop();
     }
-    else    // Create a new filesystem
+    else
         {
             std::string formatCommand;
             getline(std::cin, formatCommand);
@@ -33,9 +31,9 @@ int main(int argc, char** argv) {
             {
                 int fsSizeBytes = LibraryMethods::parseFSSize(formatCommand.substr(7));
                 FileSystem fs;
-                if (fs.createFileSystem(fsName, fsSizeBytes) != 0) {
+                if (fs.createFileSystem(fsName, fsSizeBytes) != 0)
                     return 1;
-                }
+
                 std::cout << "OK" << std::endl;
                 fs.commandLineLoop();
             }

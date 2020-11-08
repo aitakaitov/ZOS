@@ -6,11 +6,11 @@
 // Returns all directory items from a directly referenced block
 std::vector<directoryItem> FileSystem::getAllDirItemsFromDirect(int blockAddress)
 {
-    char blockArr[BLOCK_SIZE];
+    char blockArr[this->sb->blockSize];
     std::vector<directoryItem> returnVector;
-    this->readFromFS(blockArr, BLOCK_SIZE, blockAddress);
+    this->readFromFS(blockArr, this->sb->blockSize, blockAddress);
 
-    for (int i = 0; i < BLOCK_SIZE / sizeof(directoryItem); i++)
+    for (int i = 0; i < this->sb->blockSize / sizeof(directoryItem); i++)
     {
         directoryItem di = {};
         memcpy(&di, blockArr + i * sizeof(directoryItem), sizeof(directoryItem));

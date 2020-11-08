@@ -6,9 +6,9 @@
 // -1   = NOT FOUND
 int searchDirectAddress(int blockAddress, int targetAddress, FileSystem *fs)
 {
-    int dirItemsInBlock = BLOCK_SIZE / sizeof(directoryItem);
-    char blockArr[BLOCK_SIZE];
-    fs->readFromFS(blockArr, BLOCK_SIZE, blockAddress);
+    int dirItemsInBlock = fs->sb->blockSize / sizeof(directoryItem);
+    char blockArr[fs->sb->blockSize];
+    fs->readFromFS(blockArr, fs->sb->blockSize, blockAddress);
 
     for (int i = 0; i < dirItemsInBlock; i++)
     {

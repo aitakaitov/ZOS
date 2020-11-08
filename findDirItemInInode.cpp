@@ -7,9 +7,9 @@
 // -1   = NOT FOUND
 int FileSystem::searchDirect(int address, const char *name)
 {
-    int dirItemsInBlock = BLOCK_SIZE / sizeof(directoryItem);
-    char blockArr[BLOCK_SIZE];
-    this->readFromFS(blockArr, BLOCK_SIZE, address);
+    int dirItemsInBlock = this->sb->blockSize / sizeof(directoryItem);
+    char blockArr[this->sb->blockSize];
+    this->readFromFS(blockArr, this->sb->blockSize, address);
 
     for (int i = 0; i < dirItemsInBlock; i++)
     {

@@ -175,7 +175,7 @@ int FileSystem::removeFile(std::string path)
     }
 
     // Remove directory item from parent inode
-    int parentBlockIndex = (dirItemAddress - this->sb->blockStartAddress) / BLOCK_SIZE;
+    int parentBlockIndex = (dirItemAddress - this->sb->blockStartAddress) / this->sb->blockSize;
     int parentBlockAddress = this->sb->blockStartAddress + parentBlockIndex * BLOCK_SIZE;
     memset(diArr, 0, sizeof(directoryItem));
     this->writeToFS(diArr, sizeof(directoryItem), dirItemAddress);
@@ -215,91 +215,91 @@ int FileSystem::removeFile(std::string path)
     }
 
     // Remove the data the inode is pointing to
-    char clearBlockArr[BLOCK_SIZE];
-    memset(clearBlockArr, 0, BLOCK_SIZE);
+    char clearBlockArr[this->sb->blockSize];
+    memset(clearBlockArr, 0, this->sb->blockSize);
     if (indToRemove.direct1 != 0) {
-        this->toggleBitInBitmap((indToRemove.direct1 - this->sb->blockStartAddress) / BLOCK_SIZE, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        this->fillBlock(indToRemove.direct1, clearBlockArr, BLOCK_SIZE);
+        this->toggleBitInBitmap((indToRemove.direct1 - this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+        this->fillBlock(indToRemove.direct1, clearBlockArr, this->sb->blockSize);
     }
     if (indToRemove.direct2 != 0) {
-        this->toggleBitInBitmap((indToRemove.direct2 - this->sb->blockStartAddress) / BLOCK_SIZE,
+        this->toggleBitInBitmap((indToRemove.direct2 - this->sb->blockStartAddress) / this->sb->blockSize,
                                 this->sb->blockMapStartAddress,
                                 this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        this->fillBlock(indToRemove.direct2, clearBlockArr, BLOCK_SIZE);
+        this->fillBlock(indToRemove.direct2, clearBlockArr, this->sb->blockSize);
     }
     if (indToRemove.direct3 != 0) {
-        this->toggleBitInBitmap((indToRemove.direct3 - this->sb->blockStartAddress) / BLOCK_SIZE,
+        this->toggleBitInBitmap((indToRemove.direct3 - this->sb->blockStartAddress) / this->sb->blockSize,
                                 this->sb->blockMapStartAddress,
                                 this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        this->fillBlock(indToRemove.direct3, clearBlockArr, BLOCK_SIZE);
+        this->fillBlock(indToRemove.direct3, clearBlockArr, this->sb->blockSize);
     }
     if (indToRemove.direct4 != 0) {
-        this->toggleBitInBitmap((indToRemove.direct4 - this->sb->blockStartAddress) / BLOCK_SIZE,
+        this->toggleBitInBitmap((indToRemove.direct4 - this->sb->blockStartAddress) / this->sb->blockSize,
                                 this->sb->blockMapStartAddress,
                                 this->sb->blockStartAddress - this->sb->blockMapStartAddress);
 
-        this->fillBlock(indToRemove.direct4, clearBlockArr, BLOCK_SIZE);
+        this->fillBlock(indToRemove.direct4, clearBlockArr, this->sb->blockSize);
     }
     if (indToRemove.direct5 != 0) {
-        this->toggleBitInBitmap((indToRemove.direct5 - this->sb->blockStartAddress) / BLOCK_SIZE,
+        this->toggleBitInBitmap((indToRemove.direct5 - this->sb->blockStartAddress) / this->sb->blockSize,
                                 this->sb->blockMapStartAddress,
                                 this->sb->blockStartAddress - this->sb->blockMapStartAddress);
 
-        this->fillBlock(indToRemove.direct5, clearBlockArr, BLOCK_SIZE);
+        this->fillBlock(indToRemove.direct5, clearBlockArr, this->sb->blockSize);
     }
 
     if (indToRemove.indirect1 != 0)
     {
-        char indirect1Block[BLOCK_SIZE];
-        this->readFromFS(indirect1Block, BLOCK_SIZE, indToRemove.indirect1);
-        for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
+        char indirect1Block[this->sb->blockSize];
+        this->readFromFS(indirect1Block, this->sb->blockSize, indToRemove.indirect1);
+        for (int i = 0; i < this->sb->blockSize / sizeof(int32_t); i++)
         {
             int32_t address = {};
             memcpy(&address, indirect1Block + i * sizeof(int32_t), sizeof(int32_t));
             if (address != 0)
             {
-                this->toggleBitInBitmap((address - this->sb->blockStartAddress) / BLOCK_SIZE, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-                this->fillBlock(address, clearBlockArr, BLOCK_SIZE);
+                this->toggleBitInBitmap((address - this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+                this->fillBlock(address, clearBlockArr, this->sb->blockSize);
             }
         }
 
         // Clean the indirect1 block and set it as free
-        this->fillBlock(indToRemove.indirect1, clearBlockArr, BLOCK_SIZE);
-        this->toggleBitInBitmap((indToRemove.indirect1 -  this->sb->blockStartAddress) / BLOCK_SIZE, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+        this->fillBlock(indToRemove.indirect1, clearBlockArr, this->sb->blockSize);
+        this->toggleBitInBitmap((indToRemove.indirect1 -  this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
     }
 
     if (indToRemove.indirect2 != 0)
     {
-        char indirect2Block[BLOCK_SIZE];
-        this->readFromFS(indirect2Block, BLOCK_SIZE, indToRemove.indirect2);
+        char indirect2Block[this->sb->blockSize];
+        this->readFromFS(indirect2Block, this->sb->blockSize, indToRemove.indirect2);
 
-        for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
+        for (int i = 0; i < this->sb->blockSize / sizeof(int32_t); i++)
         {
             int32_t indirect1address = {};
             memcpy(&indirect1address, indirect2Block + i * sizeof(int32_t), sizeof(int32_t));
 
             if (indirect1address != 0)
             {
-                char indirect1Block[BLOCK_SIZE];
-                this->readFromFS(indirect1Block, BLOCK_SIZE, indirect1address);
-                for (int j = 0; j < BLOCK_SIZE / sizeof(int32_t); j++)
+                char indirect1Block[this->sb->blockSize];
+                this->readFromFS(indirect1Block, this->sb->blockSize, indirect1address);
+                for (int j = 0; j < this->sb->blockSize / sizeof(int32_t); j++)
                 {
                     int32_t directAddress = {};
                     memcpy(&directAddress, indirect1Block + j * sizeof(int32_t), sizeof(int32_t));
                     if (directAddress != 0)
                     {
-                        this->toggleBitInBitmap((directAddress - this->sb->blockStartAddress) / BLOCK_SIZE, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-                        this->fillBlock(directAddress, clearBlockArr, BLOCK_SIZE);
+                        this->toggleBitInBitmap((directAddress - this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+                        this->fillBlock(directAddress, clearBlockArr, this->sb->blockSize);
                     }
                 }
 
-                this->fillBlock(indirect1address, clearBlockArr, BLOCK_SIZE);
-                this->toggleBitInBitmap((indirect1address -  this->sb->blockStartAddress) / BLOCK_SIZE, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+                this->fillBlock(indirect1address, clearBlockArr, this->sb->blockSize);
+                this->toggleBitInBitmap((indirect1address -  this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             }
         }
 
-        this->fillBlock(indToRemove.indirect2, clearBlockArr, BLOCK_SIZE);
-        this->toggleBitInBitmap((indToRemove.indirect2 -  this->sb->blockStartAddress) / BLOCK_SIZE, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
+        this->fillBlock(indToRemove.indirect2, clearBlockArr, this->sb->blockSize);
+        this->toggleBitInBitmap((indToRemove.indirect2 -  this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
     }
 
     this->toggleBitInBitmap(indToRemove.nodeid - 1, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);

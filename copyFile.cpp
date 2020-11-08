@@ -9,26 +9,26 @@
 // 0    = OK
 int fillIndirect1(int indirectBlockAddress, int indirectSourceBlockAddress, int bytesToGo, FileSystem *fs)
 {
-    char blockArr[BLOCK_SIZE];
-    char indirectSrcBlockArr[BLOCK_SIZE];
-    fs->readFromFS(indirectSrcBlockArr, BLOCK_SIZE, indirectSourceBlockAddress);
+    char blockArr[fs->sb->blockSize];
+    char indirectSrcBlockArr[fs->sb->blockSize];
+    fs->readFromFS(indirectSrcBlockArr, fs->sb->blockSize, indirectSourceBlockAddress);
 
-    for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
+    for (int i = 0; i < fs->sb->blockSize / sizeof(int32_t); i++)
     {
         int blockIndex = fs->getFreeBlock();
         fs->toggleBitInBitmap(blockIndex, fs->sb->blockMapStartAddress, fs->sb->blockStartAddress - fs->sb->blockMapStartAddress);
         char intArr[sizeof(int32_t)];
-        int32_t blockAddress = fs->sb->blockStartAddress + BLOCK_SIZE * blockIndex;
+        int32_t blockAddress = fs->sb->blockStartAddress + fs->sb->blockSize * blockIndex;
         memcpy(intArr, &blockAddress, sizeof(int32_t));
         fs->writeToFS(intArr, sizeof(int32_t), indirectBlockAddress + i * sizeof(int32_t));
 
-        if (bytesToGo > BLOCK_SIZE)
+        if (bytesToGo > fs->sb->blockSize)
         {
             int32_t srcAddr = {};
             memcpy(&srcAddr, indirectSrcBlockArr + i * sizeof(int32_t), sizeof(int32_t));
-            fs->readFromFS(blockArr, BLOCK_SIZE, srcAddr);
-            fs->fillBlock(blockAddress, blockArr, BLOCK_SIZE);
-            bytesToGo -= BLOCK_SIZE;
+            fs->readFromFS(blockArr, fs->sb->blockSize, srcAddr);
+            fs->fillBlock(blockAddress, blockArr, fs->sb->blockSize);
+            bytesToGo -= fs->sb->blockSize;
         }
         else
         {
@@ -50,21 +50,21 @@ int fillIndirect1(int indirectBlockAddress, int indirectSourceBlockAddress, int 
 int fillIndirect2(int indirect2BlockAddress, int indirect2SourceBlockAddress, int bytesToGo, FileSystem *fs)
 {
     // Loop trough all the addresses
-    for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
+    for (int i = 0; i < fs->sb->blockSize / sizeof(int32_t); i++)
     {
         int blockIndex = fs->getFreeBlock();
         fs->toggleBitInBitmap(blockIndex, fs->sb->blockMapStartAddress, fs->sb->blockStartAddress - fs->sb->blockMapStartAddress);
         char intArr[sizeof(int32_t)];
-        int32_t indirectBlockAddress = fs->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
+        int32_t indirectBlockAddress = fs->sb->blockStartAddress + blockIndex * fs->sb->blockSize;
         memcpy(intArr, &indirectBlockAddress, sizeof(int32_t));
         fs->writeToFS(intArr, sizeof(int32_t), indirect2BlockAddress + i * sizeof(int32_t));
-        if (bytesToGo > (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE)
+        if (bytesToGo > (fs->sb->blockSize / sizeof(int32_t)) * fs->sb->blockSize)
         {
             int32_t srcAddr = {};
             fs->readFromFS(intArr, sizeof(int32_t), indirect2SourceBlockAddress + i * sizeof(int32_t));
             memcpy(&srcAddr, intArr, sizeof(int32_t));
             fillIndirect1(indirectBlockAddress, srcAddr, bytesToGo, fs);
-            bytesToGo -= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE;
+            bytesToGo -= (fs->sb->blockSize / sizeof(int32_t)) * fs->sb->blockSize;
         }
         else
         {
@@ -171,11 +171,11 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
 
     // Check if we have enough space
     int freeBlocks = this->getFreeBlocksNum();
-    int referencesPerBlock = BLOCK_SIZE / sizeof(int32_t);
+    int referencesPerBlock = this->sb->blockSize / sizeof(int32_t);
     int blocksNecessary;
 
-    int temp = destInd.fileSize / BLOCK_SIZE;
-    if (destInd.fileSize % BLOCK_SIZE != 0)
+    int temp = destInd.fileSize / this->sb->blockSize;
+    if (destInd.fileSize % this->sb->blockSize != 0)
         temp++;
 
     if (temp > 5)
@@ -230,13 +230,13 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
         if (destDirects[i] == 0)
         {
             int index = this->getFreeBlock();
-            destDirects[i] = this->sb->blockStartAddress + BLOCK_SIZE * index;
+            destDirects[i] = this->sb->blockStartAddress + this->sb->blockSize * index;
             this->toggleBitInBitmap(index, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-            char bytes[BLOCK_SIZE];
-            memset(bytes, 0, BLOCK_SIZE);
-            if (bytesToGo > BLOCK_SIZE) {
-                this->readFromFS(bytes, BLOCK_SIZE, sourceDirects[i]);
-                this->fillBlock(destDirects[i], bytes, BLOCK_SIZE);
+            char bytes[this->sb->blockSize];
+            memset(bytes, 0, this->sb->blockSize);
+            if (bytesToGo > this->sb->blockSize) {
+                this->readFromFS(bytes, this->sb->blockSize, sourceDirects[i]);
+                this->fillBlock(destDirects[i], bytes, this->sb->blockSize);
             }
             else {
                 this->readFromFS(bytes, bytesToGo, sourceDirects[i]);
@@ -250,7 +250,7 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
                 this->writeToFS(indArr, sizeof(inode), destInodeAddress);
                 return 0;
             }
-            bytesToGo -= BLOCK_SIZE;
+            bytesToGo -= this->sb->blockSize;
         }
     }
 
@@ -262,21 +262,21 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
 
     int blockIndex = this->getFreeBlock();
     this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-    destInd.indirect1 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
+    destInd.indirect1 = this->sb->blockStartAddress + blockIndex * this->sb->blockSize;
     fillIndirect1(destInd.indirect1, sourceInd.indirect1, bytesToGo, this);
 
     // If the remaining bytes fitted into the indirect1
-    if (bytesToGo <= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE) {
+    if (bytesToGo <= (this->sb->blockSize / sizeof(int32_t)) * this->sb->blockSize) {
         memcpy(indArr, &destInd, sizeof(inode));
         this->writeToFS(indArr, sizeof(inode), destInodeAddress);
         return 0;
     }
     else    // else we continue
-        bytesToGo -= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE;
+        bytesToGo -= (this->sb->blockSize / sizeof(int32_t)) * this->sb->blockSize;
 
     blockIndex = this->getFreeBlock();
     this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-    destInd.indirect2 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
+    destInd.indirect2 = this->sb->blockStartAddress + blockIndex * this->sb->blockSize;
     fillIndirect2(destInd.indirect2, sourceInd.indirect2, bytesToGo, this);
 
     // Write the inode and toggle the bit in the map

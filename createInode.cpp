@@ -8,8 +8,8 @@
 // 0    = OK
 int FileSystem::fillBlock(int blockAddress, char *bytes, int length)
 {
-    char blockArr[BLOCK_SIZE];
-    memset(blockArr, 0, BLOCK_SIZE);
+    char blockArr[this->sb->blockSize];
+    memset(blockArr, 0, this->sb->blockSize);
     memcpy(blockArr, bytes, length);
     this->writeToFS(blockArr, length, blockAddress);
 
@@ -22,23 +22,23 @@ int FileSystem::fillBlock(int blockAddress, char *bytes, int length)
 int fillIndirect1(int indirectBlockAddress, FILE *file, int bytesToGo, FileSystem *fs)
 {
     // Loop trough all the direct addresses in the indirect1 block.
-    for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
+    for (int i = 0; i < fs->sb->blockSize / sizeof(int32_t); i++)
     {
         // Allocate new block
         int blockIndex = fs->getFreeBlock();
         fs->toggleBitInBitmap(blockIndex, fs->sb->blockMapStartAddress, fs->sb->blockStartAddress - fs->sb->blockMapStartAddress);
         char intArr[sizeof(int32_t)];
-        int32_t blockAddress = fs->sb->blockStartAddress + BLOCK_SIZE * blockIndex;
+        int32_t blockAddress = fs->sb->blockStartAddress + fs->sb->blockSize * blockIndex;
         memcpy(intArr, &blockAddress, sizeof(int32_t));
         fs->writeToFS(intArr, sizeof(int32_t), indirectBlockAddress + i * sizeof(int32_t));
-        char blockArr[BLOCK_SIZE];
+        char blockArr[fs->sb->blockSize];
 
         // If this block is not the last one
-        if (bytesToGo > BLOCK_SIZE)
+        if (bytesToGo > fs->sb->blockSize)
         {
-            fread(blockArr, 1, BLOCK_SIZE, file);
-            fs->fillBlock(blockAddress, blockArr, BLOCK_SIZE);
-            bytesToGo -= BLOCK_SIZE;
+            fread(blockArr, 1, fs->sb->blockSize, file);
+            fs->fillBlock(blockAddress, blockArr, fs->sb->blockSize);
+            bytesToGo -= fs->sb->blockSize;
         }
         else
         {
@@ -58,21 +58,21 @@ int fillIndirect1(int indirectBlockAddress, FILE *file, int bytesToGo, FileSyste
 int fillIndirect2(int indirect2BlockAddress, FILE *file, int bytesToGo, FileSystem *fs)
 {
     // Loop trough all the addresses
-    for (int i = 0; i < BLOCK_SIZE / sizeof(int32_t); i++)
+    for (int i = 0; i < fs->sb->blockSize / sizeof(int32_t); i++)
     {
         // Allocate an indirect1 block
         int blockIndex = fs->getFreeBlock();
         fs->toggleBitInBitmap(blockIndex, fs->sb->blockMapStartAddress, fs->sb->blockStartAddress - fs->sb->blockMapStartAddress);
         char intArr[sizeof(int32_t)];
-        int32_t indirectBlockAddress = fs->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
+        int32_t indirectBlockAddress = fs->sb->blockStartAddress + blockIndex * fs->sb->blockSize;
         memcpy(intArr, &indirectBlockAddress, sizeof(int32_t));
         fs->writeToFS(intArr, sizeof(int32_t), indirect2BlockAddress + i * sizeof(int32_t));
 
         // Fill the indirect1 with data
-        if (bytesToGo > (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE)
+        if (bytesToGo > (fs->sb->blockSize / sizeof(int32_t)) * fs->sb->blockSize)
         {
             fillIndirect1(indirectBlockAddress, file, bytesToGo, fs);
-            bytesToGo -= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE;
+            bytesToGo -= (fs->sb->blockSize / sizeof(int32_t)) * fs->sb->blockSize;
         }
         else
             {
@@ -102,8 +102,8 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
     if (file == NULL)
     {
         ind.isDirectory = true;
-        ind.fileSize = BLOCK_SIZE;
-        ind.direct1 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
+        ind.fileSize = this->sb->blockSize;
+        ind.direct1 = this->sb->blockStartAddress + blockIndex * this->sb->blockSize;
     }
     else
         {
@@ -163,11 +163,11 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             // One block is reserved already, but thats not convenient for us
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             int freeBlocks = this->getFreeBlocksNum();
-            int referencesPerBlock = BLOCK_SIZE / sizeof(int32_t);
+            int referencesPerBlock = this->sb->blockSize / sizeof(int32_t);
             int blocksNecessary;
 
-            int temp = ind.fileSize / BLOCK_SIZE;
-            if (ind.fileSize % BLOCK_SIZE != 0)
+            int temp = ind.fileSize / this->sb->blockSize;
+            if (ind.fileSize % this->sb->blockSize != 0)
                 temp++;
 
             if (temp > 5)
@@ -209,6 +209,8 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
                 return 3;
             }
 
+            ind.fileSize = blocksNecessary * this->sb->blockSize;
+
             // Fill the directs with data
             int i = 0;
             int bytesToGo = ind.fileSize;
@@ -219,13 +221,13 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
                 if (directs[i] == 0)
                 {
                     int index = this->getFreeBlock();
-                    directs[i] = this->sb->blockStartAddress + BLOCK_SIZE * index;
+                    directs[i] = this->sb->blockStartAddress + this->sb->blockSize * index;
                     this->toggleBitInBitmap(index, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-                    char bytes[BLOCK_SIZE];
-                    memset(bytes, 0, BLOCK_SIZE);
-                    if (bytesToGo > BLOCK_SIZE) {
-                        fread(bytes, 1, BLOCK_SIZE, file);
-                        this->fillBlock(directs[i], bytes, BLOCK_SIZE);
+                    char bytes[this->sb->blockSize];
+                    memset(bytes, 0, this->sb->blockSize);
+                    if (bytesToGo > this->sb->blockSize) {
+                        fread(bytes, 1, this->sb->blockSize, file);
+                        this->fillBlock(directs[i], bytes, this->sb->blockSize);
                     }
                     else {
                         fread(bytes, 1, bytesToGo, file);
@@ -240,7 +242,7 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
                         this->writeToFS(indArr, sizeof(inode), inodeAddress);
                         return 0;
                     }
-                    bytesToGo -= BLOCK_SIZE;
+                    bytesToGo -= this->sb->blockSize;
                 }
             }
 
@@ -253,21 +255,21 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             // Fill indirect1 with data
             blockIndex = this->getFreeBlock();
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-            ind.indirect1 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
+            ind.indirect1 = this->sb->blockStartAddress + blockIndex * this->sb->blockSize;
             fillIndirect1(ind.indirect1, file, bytesToGo, this);
-            if (bytesToGo <= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE) {
+            if (bytesToGo <= (this->sb->blockSize / sizeof(int32_t)) * this->sb->blockSize) {
                 char indArr[sizeof(inode)];
                 memcpy(indArr, &ind, sizeof(inode));
                 this->writeToFS(indArr, sizeof(inode), inodeAddress);
                 return 0;
             }
             else
-                bytesToGo -= (BLOCK_SIZE / sizeof(int32_t)) * BLOCK_SIZE;
+                bytesToGo -= (this->sb->blockSize / sizeof(int32_t)) * this->sb->blockSize;
 
             // Fill indirect2 with data
             blockIndex = this->getFreeBlock();
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-            ind.indirect2 = this->sb->blockStartAddress + blockIndex * BLOCK_SIZE;
+            ind.indirect2 = this->sb->blockStartAddress + blockIndex * this->sb->blockSize;
             fillIndirect2(ind.indirect2, file, bytesToGo, this);
 
             // Write the inode to FS

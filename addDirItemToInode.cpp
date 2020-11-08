@@ -26,7 +26,7 @@ int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress
             return -1;
 
         this->toggleBitInBitmap(freeBlockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        blockAddress = this->sb->blockStartAddress + freeBlockIndex * BLOCK_SIZE;
+        blockAddress = this->sb->blockStartAddress + freeBlockIndex * this->sb->blockSize;
         this->writeToFS(diArr, sizeof(directoryItem), blockAddress);
 
         return blockAddress;
@@ -76,7 +76,7 @@ int FileSystem::addDirItemToInode(char *name, char *extension, int inodeAddress,
     if (res > 0)
     {
         ind.direct2 = res;
-        ind.fileSize += BLOCK_SIZE;
+        ind.fileSize += this->sb->blockSize;
         memcpy(inodeArr, &ind, sizeof(inode));
         this->writeToFS(inodeArr, sizeof(inode), inodeAddress);
         return 0;
@@ -89,7 +89,7 @@ int FileSystem::addDirItemToInode(char *name, char *extension, int inodeAddress,
     if (res > 0)
     {
         ind.direct3 = res;
-        ind.fileSize += BLOCK_SIZE;
+        ind.fileSize += this->sb->blockSize;
         memcpy(inodeArr, &ind, sizeof(inode));
         this->writeToFS(inodeArr, sizeof(inode), inodeAddress);
         return 0;
@@ -102,7 +102,7 @@ int FileSystem::addDirItemToInode(char *name, char *extension, int inodeAddress,
     if (res > 0)
     {
         ind.direct4 = res;
-        ind.fileSize += BLOCK_SIZE;
+        ind.fileSize += this->sb->blockSize;
         memcpy(inodeArr, &ind, sizeof(inode));
         this->writeToFS(inodeArr, sizeof(inode), inodeAddress);
         return 0;
@@ -115,7 +115,7 @@ int FileSystem::addDirItemToInode(char *name, char *extension, int inodeAddress,
     if (res > 0)
     {
         ind.direct5 = res;
-        ind.fileSize += BLOCK_SIZE;
+        ind.fileSize += this->sb->blockSize;
         memcpy(inodeArr, &ind, sizeof(inode));
         this->writeToFS(inodeArr, sizeof(inode), inodeAddress);
         return 0;

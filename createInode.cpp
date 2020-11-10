@@ -2,6 +2,54 @@
 #include <iostream>
 #include "FileSystem.h"
 
+// Given a file size, calculates the number of blocks necessary to store the data
+// -2   = FILE TOO LARGE FOR FS
+// >0   = BLOCKS NECESSARY
+int FileSystem::getBlocksNecessary(int sizeBytes)
+{
+    int blocksNecessary = 0;
+    int referencesPerBlock = this->sb->blockSize / sizeof(int32_t);
+
+    int temp = sizeBytes / this->sb->blockSize;
+    if (sizeBytes % this->sb->blockSize != 0)
+        temp++;
+
+    if (temp > 5)
+    {
+        blocksNecessary = 5;
+        temp = temp - 5;
+        if (temp > referencesPerBlock)
+        {
+            blocksNecessary += referencesPerBlock + 1;
+            temp = temp - referencesPerBlock - 1;
+
+            if (temp > referencesPerBlock * referencesPerBlock)
+            {
+                std::cout << "FILE TOO LARGE" << std::endl;
+                return -2;
+            }
+            else
+            {
+                blocksNecessary += 1;
+                if (temp / referencesPerBlock == 0)
+                    blocksNecessary += 1 + temp;
+                else
+                {
+                    blocksNecessary += (temp / referencesPerBlock) * (referencesPerBlock + 1);
+                    if (temp % referencesPerBlock != 0)
+                        blocksNecessary += 1 + (temp % referencesPerBlock);
+                }
+            }
+        }
+        else
+            blocksNecessary += temp + 1;
+    }
+    else
+        blocksNecessary = temp;
+
+    return blocksNecessary;
+}
+
 // Fills block with bytes, given a block address (in fs)
 // expects the bytes not NULL
 // expects the length <= BLOCK_SIZE
@@ -163,53 +211,18 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             // One block is reserved already, but thats not convenient for us
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             int freeBlocks = this->getFreeBlocksNum();
-            int referencesPerBlock = this->sb->blockSize / sizeof(int32_t);
-            int blocksNecessary;
+            int blocksNecessary = this->getBlocksNecessary(ind.fileSize);
 
-            int temp = ind.fileSize / this->sb->blockSize;
-            if (ind.fileSize % this->sb->blockSize != 0)
-                temp++;
-
-            if (temp > 5)
+            if (blocksNecessary == -2)
             {
-                blocksNecessary = 5;
-                temp = temp - 5;
-                if (temp > referencesPerBlock)
-                {
-                    blocksNecessary += referencesPerBlock + 1;
-                    temp = temp - referencesPerBlock - 1;
-
-                    if (temp > referencesPerBlock * referencesPerBlock)
-                    {
-                        std::cout << "FILE TOO LARGE" << std::endl;
-                        return 2;
-                    }
-                    else
-                        {
-                            blocksNecessary += 1;
-                            if (temp / referencesPerBlock == 0)
-                                blocksNecessary += 1 + temp;
-                            else
-                                {
-                                    blocksNecessary += (temp / referencesPerBlock) * (referencesPerBlock + 1);
-                                    if (temp % referencesPerBlock != 0)
-                                        blocksNecessary += 1 + (temp % referencesPerBlock);
-                                }
-                        }
-                }
-                else
-                    blocksNecessary += temp + 1;
+                std::cout << "FILE TOO LARGE FOR FS" << std::endl;
             }
-            else
-                blocksNecessary = temp;
 
             if (freeBlocks < blocksNecessary)
             {
                 std::cout << "NOT ENOUGH FREE BLOCKS" << std::endl;
                 return 3;
             }
-
-            ind.fileSize = blocksNecessary * this->sb->blockSize;
 
             // Fill the directs with data
             int i = 0;

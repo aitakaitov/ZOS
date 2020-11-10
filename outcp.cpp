@@ -5,6 +5,7 @@
 // Copies the file in filePath to outputPath (outside of FS)
 // 1    = FILE COULD NOT BE CREATED
 // 2    = FILE DOES NOT EXIST
+// 3    = NOT A FILE
 // 0    = OK
 int FileSystem::outcp(std::string filePath, const std::string& outputPath)
 {
@@ -12,7 +13,7 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
     FILE *file = fopen(outputPath.c_str(), "w");
     if (file == NULL)
     {
-        std::cout << "FILE COULD NOT BE CREATED" << std::endl;
+        std::cout << "PATH NOT FOUND" << std::endl;
         fclose(file);
         return 1;
     }
@@ -22,7 +23,7 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
     int inodeAddress = this->getInodeAddressForPath(filePath);
     if (inodeAddress == -1)
     {
-        std::cout << "FILE DOES NOT EXIST" << std::endl;
+        std::cout << "FILE NOT FOUND" << std::endl;
         fclose(file);
         return 2;
     }
@@ -32,33 +33,85 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
     this->readFromFS(indArr, sizeof(inode), inodeAddress);
     memcpy(&ind, indArr, sizeof(inode));
 
+    if (ind.isDirectory)
+    {
+        std::cout << "NOT A FILE" << std::endl;
+        return 3;
+    }
+
+    int bytesToGo = ind.fileSize;
+
     // Loop trough directs
     char blockArr[this->sb->blockSize];
-    if (ind.direct1 != 0)
+    if (ind.direct1 != 0 && bytesToGo > this->sb->blockSize)
     {
         this->readFromFS(blockArr, this->sb->blockSize, ind.direct1);
         fwrite(blockArr, 1, this->sb->blockSize, file);
+        bytesToGo -= this->sb->blockSize;
     }
-    if (ind.direct2 != 0)
+    else
+        {
+            this->readFromFS(blockArr, bytesToGo, ind.direct1);
+            fwrite(blockArr, 1, bytesToGo, file);
+            fclose(file);
+            return 0;
+        }
+
+    if (ind.direct2 != 0 && bytesToGo > this->sb->blockSize)
     {
         this->readFromFS(blockArr, this->sb->blockSize, ind.direct2);
         fwrite(blockArr, 1, this->sb->blockSize, file);
+        bytesToGo -= this->sb->blockSize;
     }
-    if (ind.direct3 != 0)
+    else
+        {
+            this->readFromFS(blockArr, bytesToGo, ind.direct2);
+            fwrite(blockArr, 1, bytesToGo, file);
+            fclose(file);
+            return 0;
+        }
+
+    if (ind.direct3 != 0 && bytesToGo > this->sb->blockSize)
     {
         this->readFromFS(blockArr, this->sb->blockSize, ind.direct3);
         fwrite(blockArr, 1, this->sb->blockSize, file);
+        bytesToGo -= this->sb->blockSize;
     }
-    if (ind.direct4 != 0)
+    else
+        {
+            this->readFromFS(blockArr, bytesToGo, ind.direct3);
+            fwrite(blockArr, 1, bytesToGo, file);
+            fclose(file);
+            return 0;
+        }
+
+    if (ind.direct4 != 0 && bytesToGo > this->sb->blockSize)
     {
         this->readFromFS(blockArr, this->sb->blockSize, ind.direct4);
         fwrite(blockArr, 1, this->sb->blockSize, file);
+        bytesToGo -= this->sb->blockSize;
     }
-    if (ind.direct5 != 0)
+    else
+        {
+            this->readFromFS(blockArr, bytesToGo, ind.direct4);
+            fwrite(blockArr, 1, bytesToGo, file);
+            fclose(file);
+            return 0;
+        }
+
+    if (ind.direct5 != 0 && bytesToGo > this->sb->blockSize)
     {
         this->readFromFS(blockArr, this->sb->blockSize, ind.direct5);
         fwrite(blockArr, 1, this->sb->blockSize, file);
+        bytesToGo -= this->sb->blockSize;
     }
+    else
+        {
+            this->readFromFS(blockArr, bytesToGo, ind.direct5);
+            fwrite(blockArr, 1, bytesToGo, file);
+            fclose(file);
+            return 0;
+        }
 
     // Loop trough indirect1
     if (ind.indirect1 != 0)
@@ -71,8 +124,19 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
             memcpy(&address, indirect1Block + i * sizeof(int32_t), sizeof(int32_t));
             if (address != 0)
             {
-                this->readFromFS(blockArr, this->sb->blockSize, address);
-                fwrite(blockArr, 1, this->sb->blockSize, file);
+                if (bytesToGo > this->sb->blockSize)
+                {
+                    this->readFromFS(blockArr, this->sb->blockSize, address);
+                    fwrite(blockArr, 1, this->sb->blockSize, file);
+                    bytesToGo -= this->sb->blockSize;
+                }
+                else
+                    {
+                        this->readFromFS(blockArr, bytesToGo, address);
+                        fwrite(blockArr, 1, bytesToGo, file);
+                        fclose(file);
+                        return 0;
+                    }
             }
         }
     }
@@ -98,8 +162,19 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
                     memcpy(&directAddress, indirect1Block + j * sizeof(int32_t), sizeof(int32_t));
                     if (directAddress != 0)
                     {
-                        this->readFromFS(blockArr, this->sb->blockSize, directAddress);
-                        fwrite(blockArr, 1, this->sb->blockSize, file);
+                        if (bytesToGo > this->sb->blockSize)
+                        {
+                            this->readFromFS(blockArr, this->sb->blockSize, directAddress);
+                            fwrite(blockArr, 1, this->sb->blockSize, file);
+                            bytesToGo -= this->sb->blockSize;
+                        }
+                        else
+                            {
+                                this->readFromFS(blockArr, bytesToGo, directAddress);
+                                fwrite(blockArr, 1, bytesToGo, file);
+                                fclose(file);
+                                return 0;
+                            }
                     }
                 }
             }

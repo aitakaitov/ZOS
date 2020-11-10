@@ -175,8 +175,6 @@ int FileSystem::removeFile(std::string path)
     }
 
     // Remove directory item from parent inode
-    int parentBlockIndex = (dirItemAddress - this->sb->blockStartAddress) / this->sb->blockSize;
-    int parentBlockAddress = this->sb->blockStartAddress + parentBlockIndex * BLOCK_SIZE;
     memset(diArr, 0, sizeof(directoryItem));
     this->writeToFS(diArr, sizeof(directoryItem), dirItemAddress);
 
@@ -215,37 +213,37 @@ int FileSystem::removeFile(std::string path)
     }
 
     // Remove the data the inode is pointing to
-    char clearBlockArr[this->sb->blockSize];
-    memset(clearBlockArr, 0, this->sb->blockSize);
+    //char clearBlockArr[this->sb->blockSize];
+    //memset(clearBlockArr, 0, this->sb->blockSize);
     if (indToRemove.direct1 != 0) {
         this->toggleBitInBitmap((indToRemove.direct1 - this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        this->fillBlock(indToRemove.direct1, clearBlockArr, this->sb->blockSize);
+        //this->fillBlock(indToRemove.direct1, clearBlockArr, this->sb->blockSize);
     }
     if (indToRemove.direct2 != 0) {
         this->toggleBitInBitmap((indToRemove.direct2 - this->sb->blockStartAddress) / this->sb->blockSize,
                                 this->sb->blockMapStartAddress,
                                 this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        this->fillBlock(indToRemove.direct2, clearBlockArr, this->sb->blockSize);
+        //this->fillBlock(indToRemove.direct2, clearBlockArr, this->sb->blockSize);
     }
     if (indToRemove.direct3 != 0) {
         this->toggleBitInBitmap((indToRemove.direct3 - this->sb->blockStartAddress) / this->sb->blockSize,
                                 this->sb->blockMapStartAddress,
                                 this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-        this->fillBlock(indToRemove.direct3, clearBlockArr, this->sb->blockSize);
+        //this->fillBlock(indToRemove.direct3, clearBlockArr, this->sb->blockSize);
     }
     if (indToRemove.direct4 != 0) {
         this->toggleBitInBitmap((indToRemove.direct4 - this->sb->blockStartAddress) / this->sb->blockSize,
                                 this->sb->blockMapStartAddress,
                                 this->sb->blockStartAddress - this->sb->blockMapStartAddress);
 
-        this->fillBlock(indToRemove.direct4, clearBlockArr, this->sb->blockSize);
+        //this->fillBlock(indToRemove.direct4, clearBlockArr, this->sb->blockSize);
     }
     if (indToRemove.direct5 != 0) {
         this->toggleBitInBitmap((indToRemove.direct5 - this->sb->blockStartAddress) / this->sb->blockSize,
                                 this->sb->blockMapStartAddress,
                                 this->sb->blockStartAddress - this->sb->blockMapStartAddress);
 
-        this->fillBlock(indToRemove.direct5, clearBlockArr, this->sb->blockSize);
+        //this->fillBlock(indToRemove.direct5, clearBlockArr, this->sb->blockSize);
     }
 
     if (indToRemove.indirect1 != 0)
@@ -259,12 +257,12 @@ int FileSystem::removeFile(std::string path)
             if (address != 0)
             {
                 this->toggleBitInBitmap((address - this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-                this->fillBlock(address, clearBlockArr, this->sb->blockSize);
+                //this->fillBlock(address, clearBlockArr, this->sb->blockSize);
             }
         }
 
         // Clean the indirect1 block and set it as free
-        this->fillBlock(indToRemove.indirect1, clearBlockArr, this->sb->blockSize);
+        //this->fillBlock(indToRemove.indirect1, clearBlockArr, this->sb->blockSize);
         this->toggleBitInBitmap((indToRemove.indirect1 -  this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
     }
 
@@ -289,16 +287,16 @@ int FileSystem::removeFile(std::string path)
                     if (directAddress != 0)
                     {
                         this->toggleBitInBitmap((directAddress - this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
-                        this->fillBlock(directAddress, clearBlockArr, this->sb->blockSize);
+                        //this->fillBlock(directAddress, clearBlockArr, this->sb->blockSize);
                     }
                 }
 
-                this->fillBlock(indirect1address, clearBlockArr, this->sb->blockSize);
+                //this->fillBlock(indirect1address, clearBlockArr, this->sb->blockSize);
                 this->toggleBitInBitmap((indirect1address -  this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             }
         }
 
-        this->fillBlock(indToRemove.indirect2, clearBlockArr, this->sb->blockSize);
+        //this->fillBlock(indToRemove.indirect2, clearBlockArr, this->sb->blockSize);
         this->toggleBitInBitmap((indToRemove.indirect2 -  this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
     }
 
@@ -308,30 +306,3 @@ int FileSystem::removeFile(std::string path)
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

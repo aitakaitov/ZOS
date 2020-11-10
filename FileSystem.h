@@ -9,8 +9,8 @@
 
 const int32_t ID_ITEM_FREE = 0;     // i-node is free if it has this as inodeid
 
-const int32_t BYTES_PER_INODE = 256; // there will be 1 i-node per BYTES_PER_INODE bytes in FS
-const int32_t BLOCK_SIZE = 1204;      // data block size in bytes
+const int32_t BYTES_PER_INODE = 2048; // there will be 1 i-node per BYTES_PER_INODE bytes in FS
+const int32_t BLOCK_SIZE = 2048;      // data block size in bytes
 const int32_t FS_NAME_LENGTH = 12;
 
 struct superblock {
@@ -112,6 +112,8 @@ public:
     int fillDirectWithDI(int blockAddress, std::vector<directoryItem> &dirItems);
 
     int defragmentDirects(inode &ind);
+
+    int getBlocksNecessary(int sizeBytes);
 };
 
 

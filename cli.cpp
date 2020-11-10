@@ -40,6 +40,11 @@ int FileSystem::processCommand(std::string command)
         else
             {
                 int inodeAddress = this->getInodeAddressForPath(splitCommand.at(1));
+                if (inodeAddress == -1)
+                {
+                    std::cout << "PATH NOT FOUND" << std::endl;
+                    return 0;
+                }
                 this->list(inodeAddress);
             }
     }

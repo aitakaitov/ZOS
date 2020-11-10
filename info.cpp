@@ -54,7 +54,7 @@ int FileSystem::info(std::string path)
     if (strcmp(cExtension, "") != 0)
         std::cout << "." << cExtension;
 
-    std::cout << " - " << targetInd.fileSize << " - " << targetInd.nodeid << " - " << targetInd.fileSize / this->sb->blockSize << std::endl;
+    std::cout << " - " << targetInd.fileSize << " - " << targetInd.nodeid << " - " << this->getBlocksNecessary(targetInd.fileSize) << std::endl;
 
     return 0;
 }

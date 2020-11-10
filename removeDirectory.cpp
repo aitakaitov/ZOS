@@ -123,15 +123,15 @@ int FileSystem::removeDirectory(std::string path)
     }
 
     // Erase the . and .. from block
-    char blockArr[this->sb->blockSize];
-    memset(blockArr, 0, this->sb->blockSize);
-    this->writeToFS(blockArr, this->sb->blockSize, indToRemove.direct1);
+    //char blockArr[this->sb->blockSize];
+    //memset(blockArr, 0, this->sb->blockSize);
+    //this->writeToFS(blockArr, this->sb->blockSize, indToRemove.direct1);
     // Set the block as available
     this->toggleBitInBitmap((indToRemove.direct1 - this->sb->blockStartAddress) / this->sb->blockSize, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
 
     // Erase the inode
-    memset(indArr, 0, sizeof(inode));
-    this->writeToFS(indArr, sizeof(inode), diToRemove.inode);
+    //memset(indArr, 0, sizeof(inode));
+    //this->writeToFS(indArr, sizeof(inode), diToRemove.inode);
     // Set the inode as available
     this->toggleBitInBitmap(indToRemove.nodeid - 1, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);
 

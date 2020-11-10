@@ -171,46 +171,7 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
 
     // Check if we have enough space
     int freeBlocks = this->getFreeBlocksNum();
-    int referencesPerBlock = this->sb->blockSize / sizeof(int32_t);
-    int blocksNecessary;
-
-    int temp = destInd.fileSize / this->sb->blockSize;
-    if (destInd.fileSize % this->sb->blockSize != 0)
-        temp++;
-
-    if (temp > 5)
-    {
-        blocksNecessary = 5;
-        temp = temp - 5;
-        if (temp > referencesPerBlock)
-        {
-            blocksNecessary += referencesPerBlock + 1;
-            temp = temp - referencesPerBlock - 1;
-
-            if (temp > referencesPerBlock * referencesPerBlock)
-            {
-                this->removeDirItemFromInode(destinationFileName, destParentInodeAddr);
-                std::cout << "FILE TOO LARGE" << std::endl;
-                return 7;
-            }
-            else
-            {
-                blocksNecessary += 1;
-                if (temp / referencesPerBlock == 0)
-                    blocksNecessary += 1 + temp;
-                else
-                {
-                    blocksNecessary += (temp / referencesPerBlock) * (referencesPerBlock + 1);
-                    if (temp % referencesPerBlock != 0)
-                        blocksNecessary += 1 + (temp % referencesPerBlock);
-                }
-            }
-        }
-        else
-            blocksNecessary += temp + 1;
-    }
-    else
-        blocksNecessary = temp;
+    int blocksNecessary = this->getBlocksNecessary(sourceInd.fileSize);
 
     if (freeBlocks < blocksNecessary)
     {

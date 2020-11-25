@@ -11,6 +11,7 @@ public:
     static int checkBit(char byte, int pos);
     static std::vector<std::string> split(const std::string& str, char delim);
     static bool fileExists(const std::string &path);
+    static void parseName(const std::string& name, char *cName, char *cExtension, bool isDirectory);
 };
 
 

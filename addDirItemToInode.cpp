@@ -33,7 +33,9 @@ int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress
     }
     else
         {
-            int dirItemAddress = this->searchDirect(blockAddress, "");
+            char emptyName[12];
+            memset(emptyName, 0, 12);
+            int dirItemAddress = this->searchDirect(blockAddress, emptyName);
             if (dirItemAddress != -1)
             {
                 this->writeToFS(diArr, sizeof(directoryItem), dirItemAddress);

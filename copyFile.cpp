@@ -209,6 +209,7 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
                 destInd.direct5 = destDirects[4];
                 memcpy(indArr, &destInd, sizeof(inode));
                 this->writeToFS(indArr, sizeof(inode), destInodeAddress);
+                this->toggleBitInBitmap(inodeIndex, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);
                 return 0;
             }
             bytesToGo -= this->sb->blockSize;
@@ -230,6 +231,7 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
     if (bytesToGo <= (this->sb->blockSize / sizeof(int32_t)) * this->sb->blockSize) {
         memcpy(indArr, &destInd, sizeof(inode));
         this->writeToFS(indArr, sizeof(inode), destInodeAddress);
+        this->toggleBitInBitmap(inodeIndex, this->sb->inodeMapStartAddress, this->sb->inodeStartAddress - this->sb->inodeMapStartAddress);
         return 0;
     }
     else    // else we continue

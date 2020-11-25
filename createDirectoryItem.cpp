@@ -16,12 +16,6 @@
 // -1   = ERROR IN CREATING THE INODE
 int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *file)
 {
-    if (isDirectory && path.find('.') != std::string::npos)
-    {
-        std::cout << ". NOT ALLOWED IN DIR NAME" << std::endl;
-        return 6;
-    }
-
     const char fslash = '/';
     inode ind = {};
     int inodeAddress;
@@ -78,15 +72,9 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
         this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         // We need to add a directory item to the parent inode, which could require another block,
         // in case the ones allocated are full
-        std::vector<std::string> splitName = LibraryMethods::split(splitPath.at(0), '.');
         char name[8];
-        memset(name, 0, 8);
-        memcpy(name, splitName.at(0).c_str(), splitName.at(0).size());
-
         char extension[3];
-        memset(extension, 0, 3);
-        if (splitName.size() == 2)
-            memcpy(extension, splitName.at(1).c_str(), splitName.at(1).size());
+        LibraryMethods::parseName(splitPath.at(0), name, extension, isDirectory);
 
         int res = this->addDirItemToInode(name, extension, inodeAddress, this->sb->inodeStartAddress + inodeIndex * sizeof(inode));
         // If there is no space to allocate the DI, un-reserve the block
@@ -166,15 +154,9 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             // We need to add a directory item to the parent inode, which could require another block,
             // in case the ones allocated are full
-            std::vector<std::string> splitName = LibraryMethods::split(splitPath.at(splitPath.size() - 1), '.');
             char name[8];
-            memset(name, 0, 8);
-            memcpy(name, splitName.at(0).c_str(), splitName.at(0).size());
-
             char extension[3];
-            memset(extension, 0, 3);
-            if (splitName.size() == 2)
-                memcpy(extension, splitName.at(1).c_str(), splitName.at(1).size());
+            LibraryMethods::parseName(lastFile, name, extension, isDirectory);
 
             int res = this->addDirItemToInode(name, extension, inodeAddress, this->sb->inodeStartAddress + inodeIndex * sizeof(inode));
             // If there is no space to allocate the DI, un-reserve the block
@@ -191,7 +173,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 // If we are unsuccessful in creating the inode, we un-allocate the block
                 if (res != 0)
                 {
-                    this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
+                    this->removeDirItemFromInode(lastFile, inodeAddress);
                     return -1;
                 }
                 else    // Otherwise, we allocate the inode in the bitmap
@@ -205,7 +187,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
                 res = this->createInode(inodeIndex, blockIndex, 0, file);
                 if (res != 0)
                 {
-                    this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
+                    this->removeDirItemFromInode(lastFile, inodeAddress);
                     return -1;
                 }
                 else

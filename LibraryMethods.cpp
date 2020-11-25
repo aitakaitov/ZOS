@@ -1,10 +1,10 @@
-
-
 #include <string>
 #include <vector>
 #include <sstream>
 #include <sys/stat.h>
+#include <cstring>
 #include "LibraryMethods.h"
+#include "FileSystem.h"
 
 // Parses a size
 // Size format is (N)*[B|KB|MB|GB]
@@ -91,4 +91,51 @@ bool LibraryMethods::fileExists(const std::string& path)
 {
     struct stat buffer{};
     return (stat (path.c_str(), &buffer) == 0);
+}
+
+void LibraryMethods::parseName(const std::string& name, char *cName, char *cExtension, bool isDirectory)
+{
+    memset(cName, 0, 8);
+    memset(cExtension, 0, 3);
+
+    if (name.length() == 0)
+        return;
+
+    if (name == "..")
+    {
+        cName[0] = '.';
+        cName[1] = '.';
+        return;
+    }
+
+    if (name == ".")
+    {
+        cName[0] = '.';
+        return;
+    }
+
+
+    if (isDirectory)
+    {
+        if (name.size() > 8)
+            memcpy(cName, name.c_str(), 8);
+        else
+            memcpy(cName, name.c_str(), name.size());
+    }
+    else
+        {
+            std::vector<std::string> splitName = LibraryMethods::split(name, '.');
+            if (splitName.at(0).size() > 8)
+                memcpy(cName, splitName.at(0).c_str(), 8);
+            else
+                memcpy(cName, splitName.at(0).c_str(), splitName.at(0).size());
+
+            if (splitName.size() == 2)
+            {
+                if (splitName.at(1).size() > 3)
+                    memcpy(cExtension, splitName.at(1).c_str(), 3);
+                else
+                    memcpy(cExtension, splitName.at(1).c_str(), splitName.at(1).size());
+            }
+        }
 }

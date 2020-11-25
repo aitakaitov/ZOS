@@ -162,7 +162,7 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
         }
 
     if (ind.isDirectory)
-        ind.references = 2;
+        ind.references = 0;
     else
         ind.references = 1;
 
@@ -198,13 +198,13 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
         }
 
         // Increment the number of references in parent
-        inode indParent = {};
+        /*inode indParent = {};
         char indParentArr[sizeof(inode)];
         this->readFromFS(indParentArr, sizeof(inode), parentInodeAddress);
         memcpy(&indParent, indParentArr, sizeof(inode));
         indParent.references++;
         memcpy(indParentArr, &indParent, sizeof(inode));
-        this->writeToFS(indParentArr, sizeof(inode), parentInodeAddress);
+        this->writeToFS(indParentArr, sizeof(inode), parentInodeAddress);*/
     }
     else
         {

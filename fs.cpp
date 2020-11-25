@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
             {
                 int fsSizeBytes = LibraryMethods::parseFSSize(formatCommand.substr(7));
                 FileSystem fs;
-                if (fs.createFileSystem(fsName, fsSizeBytes) <= 0)
+                if (fs.createFileSystem(fsName, fsSizeBytes) != 0)
                     return 1;
 
                 std::cout << "OK" << std::endl;

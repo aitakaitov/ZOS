@@ -4,17 +4,17 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
-// Creates a directory of a file given a path and data (data only in case it is a file)
-// Was created at the beginning of the project and is very crude and could be simplified, but it works now, so I don't want to touch it
+// Creates a directory or a file given a path and data (data only in case it is a file)
+// Was created at the beginning of the project and is very crude and could be simplified
+// It however works
 // 0    = OK
 // 1    = EXIST
 // 2    = NO FREE INODE
 // 3    = NO FREE BLOCK
 // 4    = MAX ITEMS IN DIRECTORY (or NO FREE BLOCK)
 // 5    = PATH NOT FOUND
-// 6    = . IN DIR NAME NOT ALLOWED
 // -1   = ERROR IN CREATING THE INODE
-int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *file)
+int FileSystem::createFileOrDir(std::string path, bool isDirectory, FILE *file)
 {
     const char fslash = '/';
     inode ind = {};
@@ -87,7 +87,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
 
         if (isDirectory)
         {
-            res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL);
+            res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL, isDirectory);
             // If we are unsuccessful in creating the inode, we un-allocate the block
             if (res != 0)
             {
@@ -102,7 +102,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
         }
         else
             {
-                res = this->createInode(inodeIndex, blockIndex, 0, file);
+                res = this->createInode(inodeIndex, blockIndex, 0, file, isDirectory);
                 if (res != 0)
                 {
                     this->removeDirItemFromInode(splitPath.at(0), inodeAddress);
@@ -169,7 +169,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
 
             if (isDirectory)
             {
-                res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL);
+                res = this->createInode(inodeIndex, blockIndex, inodeAddress, NULL, isDirectory);
                 // If we are unsuccessful in creating the inode, we un-allocate the block
                 if (res != 0)
                 {
@@ -184,7 +184,7 @@ int FileSystem::createDirectoryItem(std::string path, bool isDirectory, FILE *fi
             }
             else
             {
-                res = this->createInode(inodeIndex, blockIndex, 0, file);
+                res = this->createInode(inodeIndex, blockIndex, 0, file, isDirectory);
                 if (res != 0)
                 {
                     this->removeDirItemFromInode(lastFile, inodeAddress);

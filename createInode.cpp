@@ -136,22 +136,26 @@ int fillIndirect2(int indirect2BlockAddress, FILE *file, int bytesToGo, FileSyst
 // Expects the calling method to allocate the inode in the bitmap and un-allocate it in case of failure.
 // Expects the calling method to allocate a block in the bitmap. The un-allocation in case of failure is handled by this method.
 // parentInodeAddress is a FS address of the inode, in which the directoryItem, pointing to the new inode, has been placed
-// If the FILE* file is NULL, method will create a directory. Otherwise method will create a file wth data from the FILE*.
-// The FILE* is expected to be opened if not NULL. Method will not close it in case of failure.
+// isDirectory specifies what we are creating
 // 0    = OK
 // 1    = NO FREE BLOCKS
 // 2    = FILE TOO LARGE
 // 3    = NOT ENOUGH FREE BLOCKS
-int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddress, FILE *file)
+int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddress, FILE *file, bool isDirectory)
 {
     inode ind = {};
     memset(&ind, 0, sizeof(inode));
     int inodeAddress = this->sb->inodeStartAddress + inodeIndex * sizeof(inode);
-    if (file == NULL)
+    if (isDirectory)
     {
         ind.isDirectory = true;
         ind.fileSize = this->sb->blockSize;
         ind.direct1 = this->sb->blockStartAddress + blockIndex * this->sb->blockSize;
+
+        // Zero out the block in case there's any data on it
+        char blockArr[this->sb->blockSize];
+        memset(blockArr, 0, this->sb->blockSize);
+        this->writeToFS(blockArr, this->sb->blockSize, ind.direct1);
     }
     else
         {

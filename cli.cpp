@@ -28,7 +28,7 @@ int FileSystem::processCommand(std::string command)
     }
     else if (splitCommand.at(0) == "mkdir")
     {
-        if (this->createDirectoryItem(splitCommand.at(1), true) == 0)
+        if (this->createFileOrDir(splitCommand.at(1), true) == 0)
             std::cout << "OK" << std::endl;
     }
     else if (splitCommand.at(0) == "ls")
@@ -66,7 +66,7 @@ int FileSystem::processCommand(std::string command)
             std::cout << "FILE NOT FOUND" << std::endl;
             return 0;
         }
-        if (this->createDirectoryItem(splitCommand.at(2), false, file) == 0)
+        if (this->createFileOrDir(splitCommand.at(2), false, file) == 0)
             std::cout << "OK" << std::endl;
     }
     else if (splitCommand.at(0) == "outcp")

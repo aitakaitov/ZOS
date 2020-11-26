@@ -2,7 +2,8 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
-// searches a directly referenced block for a diritem
+// searches a directly referenced block for a directoryItem
+// the name parameter is expected to be 12 bytes long
 // >0   = DI ADDRESS
 // -1   = NOT FOUND
 int FileSystem::searchDirect(int address, const char *name)

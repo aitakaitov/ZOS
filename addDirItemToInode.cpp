@@ -11,9 +11,9 @@ int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress
 {
     // Get the DI ready
     directoryItem di = {};
-    memcpy(di.itemName, name, 8);
-    memcpy(di.itemName + 8, extension, 3);
-    memset(di.itemName + 11, 0, 1);
+    memcpy(di.itemName, name, FILENAME_MAX_SIZE);
+    memcpy(di.itemName + FILENAME_MAX_SIZE, extension, EXTENSION_MAX_SIZE);
+    memset(di.itemName + FILENAME_MAX_SIZE + EXTENSION_MAX_SIZE, 0, 1);
     di.inode = inodeReference;
     char diArr[sizeof(directoryItem)];
     memcpy(diArr, &di, sizeof(directoryItem));
@@ -27,14 +27,20 @@ int FileSystem::addDirItemToDirect(char *name, char *extension, int blockAddress
 
         this->toggleBitInBitmap(freeBlockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         blockAddress = this->sb->blockStartAddress + freeBlockIndex * this->sb->blockSize;
+
+        // Zero out the block in case any data is left on it
+        char blockArr[this->sb->blockSize];
+        memset(blockArr, 0, this->sb->blockSize);
+        this->writeToFS(blockArr, this->sb->blockSize, blockAddress);
+
         this->writeToFS(diArr, sizeof(directoryItem), blockAddress);
 
         return blockAddress;
     }
     else
         {
-            char emptyName[12];
-            memset(emptyName, 0, 12);
+            char emptyName[FILENAME_MAX_SIZE + EXTENSION_MAX_SIZE + 1];
+            memset(emptyName, 0, FILENAME_MAX_SIZE + EXTENSION_MAX_SIZE + 1);
             int dirItemAddress = this->searchDirect(blockAddress, emptyName);
             if (dirItemAddress != -1)
             {
@@ -59,15 +65,6 @@ int FileSystem::addDirItemToInode(char *name, char *extension, int inodeAddress,
     char inodeArr[sizeof(inode)];
     this->readFromFS(inodeArr, sizeof(inode), inodeAddress);
     memcpy(&ind, inodeArr, sizeof(inode));
-
-    // Get the DI ready
-    directoryItem di = {};
-    memcpy(di.itemName, name, 8);
-    memcpy(di.itemName + 8, extension, 3);
-    memset(di.itemName + 11, 0, 1);
-    di.inode = inodeReference;
-    char diArr[sizeof(directoryItem)];
-    memcpy(diArr, &di, sizeof(directoryItem));
 
     int res = this->addDirItemToDirect(name, extension, ind.direct1, inodeReference);
     if (res == 0)

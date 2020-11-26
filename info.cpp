@@ -8,6 +8,13 @@
 // 1    = FILE NOT FOUND
 int FileSystem::info(std::string path)
 {
+    // Special cases
+    if (path == "/")
+        path += ".";
+
+    if (path == "")
+        path += ".";
+
     std::string name;
     std::vector<std::string> splitPath = LibraryMethods::split(path, '/');
     name = splitPath.at(splitPath.size() - 1);
@@ -43,12 +50,12 @@ int FileSystem::info(std::string path)
     this->readFromFS(indArr, sizeof(inode), inodeAddress);
     memcpy(&targetInd, indArr, sizeof(inode));
 
-    char cName[9];
-    char cExtension[4];
-    memset(cName, 0, 9);
-    memset(cExtension, 0, 4);
-    memcpy(cName, di.itemName, 8);
-    memcpy(cExtension, di.itemName + 8, 3);
+    char cName[FILENAME_MAX_SIZE + 1];
+    char cExtension[EXTENSION_MAX_SIZE + 1];
+    memset(cName, 0, FILENAME_MAX_SIZE + 1);
+    memset(cExtension, 0, EXTENSION_MAX_SIZE + 1);
+    memcpy(cName, di.itemName, FILENAME_MAX_SIZE);
+    memcpy(cExtension, di.itemName + FILENAME_MAX_SIZE, EXTENSION_MAX_SIZE);
 
     std::cout << cName;
     if (strcmp(cExtension, "") != 0)

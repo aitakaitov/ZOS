@@ -93,14 +93,17 @@ bool LibraryMethods::fileExists(const std::string& path)
     return (stat (path.c_str(), &buffer) == 0);
 }
 
+// Parses a name based on it being a directory or not
+// Expects cName and cExtension to be allocated to FILENAME_MAX_SIZE and EXTENSION_MAX_SIZE, they don't need to be zeroed
 void LibraryMethods::parseName(const std::string& name, char *cName, char *cExtension, bool isDirectory)
 {
-    memset(cName, 0, 8);
-    memset(cExtension, 0, 3);
+    memset(cName, 0, FILENAME_MAX_SIZE);
+    memset(cExtension, 0, EXTENSION_MAX_SIZE);
 
     if (name.length() == 0)
         return;
 
+    // special cases
     if (name == "..")
     {
         cName[0] = '.';
@@ -114,26 +117,26 @@ void LibraryMethods::parseName(const std::string& name, char *cName, char *cExte
         return;
     }
 
-
+    // if it's a directory, copy into cName and shorten if necessary
     if (isDirectory)
     {
-        if (name.size() > 8)
-            memcpy(cName, name.c_str(), 8);
+        if (name.size() > FILENAME_MAX_SIZE)
+            memcpy(cName, name.c_str(), FILENAME_MAX_SIZE);
         else
             memcpy(cName, name.c_str(), name.size());
     }
-    else
+    else        // IF it's a file, we need to split it by .
         {
             std::vector<std::string> splitName = LibraryMethods::split(name, '.');
-            if (splitName.at(0).size() > 8)
-                memcpy(cName, splitName.at(0).c_str(), 8);
+            if (splitName.at(0).size() > FILENAME_MAX_SIZE)
+                memcpy(cName, splitName.at(0).c_str(), FILENAME_MAX_SIZE);
             else
                 memcpy(cName, splitName.at(0).c_str(), splitName.at(0).size());
 
             if (splitName.size() == 2)
             {
-                if (splitName.at(1).size() > 3)
-                    memcpy(cExtension, splitName.at(1).c_str(), 3);
+                if (splitName.at(1).size() > EXTENSION_MAX_SIZE)
+                    memcpy(cExtension, splitName.at(1).c_str(), EXTENSION_MAX_SIZE);
                 else
                     memcpy(cExtension, splitName.at(1).c_str(), splitName.at(1).size());
             }

@@ -14,7 +14,7 @@ std::vector<directoryItem> FileSystem::getAllDirItemsFromDirect(int blockAddress
     {
         directoryItem di = {};
         memcpy(&di, blockArr + i * sizeof(directoryItem), sizeof(directoryItem));
-        if (strcmp(di.itemName, "") != 0)
+        if (strcmp(di.itemName, "\0") != 0)
             returnVector.emplace_back(di);
     }
 
@@ -80,10 +80,10 @@ int FileSystem::list(int inodeAddress)
         this->readFromFS(arr, sizeof(inode), di.inode);
         memcpy(&diInode, arr, sizeof(inode));
 
-        char name[9] = {0};
-        memcpy(name, di.itemName, 8);
-        char extension[4] = {0};
-        memcpy(extension, di.itemName + 8, 3);
+        char name[FILENAME_MAX_SIZE + 1] = {0};
+        memcpy(name, di.itemName, FILENAME_MAX_SIZE);
+        char extension[EXTENSION_MAX_SIZE + 1] = {0};
+        memcpy(extension, di.itemName + FILENAME_MAX_SIZE, EXTENSION_MAX_SIZE);
 
         if (diInode.isDirectory)
         {

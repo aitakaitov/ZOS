@@ -8,6 +8,7 @@
 // 2    = PATH NOT FOUND
 // 3    = EXIST (hardlink would share a name with another item in the directory)
 // 4    = MAX ITEMS IN DIRECTORY (or NO FREE BLOCKS)
+// 5    = NOT A FILE
 // 0    = OK
 int FileSystem::ln(std::string pathToFile, std::string pathToLink)
 {
@@ -36,15 +37,15 @@ int FileSystem::ln(std::string pathToFile, std::string pathToLink)
     this->readFromFS(indArr, sizeof(inode), linkParentInodeAddress);
     memcpy(&linkParentInode, indArr, sizeof(inode));
 
-    std::vector<std::string> splitName = LibraryMethods::split(linkName, '.');
-    char cName[8];
-    memset(cName, 0, 8);
-    memcpy(cName, splitName.at(0).c_str(), splitName.at(0).size());
+    if (linkParentInode.isDirectory)
+    {
+        std::cout << "NOT A FILE" << std::endl;
+        return 5;
+    }
 
-    char extension[3];
-    memset(extension, 0, 3);
-    if (splitName.size() == 2)
-        memcpy(extension, splitName.at(1).c_str(), splitName.at(1).size());
+    char cName[FILENAME_MAX_SIZE];
+    char extension[EXTENSION_MAX_SIZE];
+    LibraryMethods::parseName(linkName, cName, extension, false);
 
     // check if it exists
     if (findDirItemInInode(linkName, linkParentInode) != -1)

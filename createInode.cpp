@@ -180,8 +180,14 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
     if (ind.isDirectory)
     {
         // add parent DI to inode
-        char name[8] = {'.', '.', '\0', '\0', '\0', '\0', '\0', '\0'};
-        char extension[3] = {'\0', '\0', '\0'};
+        char name[FILENAME_MAX_SIZE];
+        memset(name, 0, FILENAME_MAX_SIZE);
+        name[0] = '.';
+        name[1] = '.';
+
+        char extension[EXTENSION_MAX_SIZE];
+        memset(extension, 0, EXTENSION_MAX_SIZE);
+
         int res = this->addDirItemToInode(name, extension, inodeAddress, parentInodeAddress);
         if (res != 0)
         {
@@ -200,15 +206,6 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             std::cout << "NO FREE BLOCKS" << std::endl;
             return 1;
         }
-
-        // Increment the number of references in parent
-        /*inode indParent = {};
-        char indParentArr[sizeof(inode)];
-        this->readFromFS(indParentArr, sizeof(inode), parentInodeAddress);
-        memcpy(&indParent, indParentArr, sizeof(inode));
-        indParent.references++;
-        memcpy(indParentArr, &indParent, sizeof(inode));
-        this->writeToFS(indParentArr, sizeof(inode), parentInodeAddress);*/
     }
     else
         {

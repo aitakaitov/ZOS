@@ -92,7 +92,10 @@ int FileSystem::processCommand(std::string command)
     }
     else if (splitCommand.at(0) == "info")
     {
-        this->info(splitCommand.at(1));
+        if (splitCommand.size() > 1)
+            this->info(splitCommand.at(1));
+        else
+            this->info("");
     }
     else if (splitCommand.at(0) == "cat")
     {

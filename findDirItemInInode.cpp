@@ -17,7 +17,7 @@ int FileSystem::searchDirect(int address, const char *name)
     {
         directoryItem di = {};
         memcpy(&di, blockArr + i*sizeof(directoryItem), sizeof(directoryItem));
-        if (memcmp(name, di.itemName, 12) == 0)
+        if (memcmp(name, di.itemName, FILENAME_MAX_SIZE + EXTENSION_MAX_SIZE + 1) == 0)
             return address + i * (int)sizeof(directoryItem);
     }
 
@@ -26,7 +26,7 @@ int FileSystem::searchDirect(int address, const char *name)
     {
         directoryItem di = {};
         memcpy(&di, blockArr + i*sizeof(directoryItem), sizeof(directoryItem));
-        if (memcmp(name, di.itemName, 12) == 0)
+        if (memcmp(name, di.itemName, FILENAME_MAX_SIZE + EXTENSION_MAX_SIZE + 1) == 0)
             return address + i * (int)sizeof(directoryItem);
     }
 
@@ -41,13 +41,13 @@ int FileSystem::searchDirect(int address, const char *name)
 int FileSystem::findDirItemInInode(const std::string& sName, inode ind)
 {
     // Try to find a file
-    char name[8];
-    char extension[3];
+    char name[FILENAME_MAX_SIZE];
+    char extension[EXTENSION_MAX_SIZE];
     LibraryMethods::parseName(sName, name, extension, false);
-    char itemName[12];
-    memset(itemName, 0, 12);
-    memcpy(itemName, name, 8);
-    memcpy(itemName + 8, extension, 3);
+    char itemName[FILENAME_MAX_SIZE + EXTENSION_MAX_SIZE + 1];
+    memset(itemName, 0, FILENAME_MAX_SIZE + EXTENSION_MAX_SIZE + 1);
+    memcpy(itemName, name, FILENAME_MAX_SIZE);
+    memcpy(itemName + FILENAME_MAX_SIZE, extension, EXTENSION_MAX_SIZE);
 
     int address = -1;
     if (ind.direct1 != 0)
@@ -77,9 +77,9 @@ int FileSystem::findDirItemInInode(const std::string& sName, inode ind)
 
     // Try to find a directory
     LibraryMethods::parseName(sName, name, extension, true);
-    memset(itemName, 0, 12);
-    memcpy(itemName, name, 8);
-    memcpy(itemName + 8, extension, 3);
+    memset(itemName, 0, FILENAME_MAX_SIZE + EXTENSION_MAX_SIZE + 1);
+    memcpy(itemName, name, FILENAME_MAX_SIZE);
+    memcpy(itemName + 8, extension, EXTENSION_MAX_SIZE);
 
     address = -1;
     if (ind.direct1 != 0)

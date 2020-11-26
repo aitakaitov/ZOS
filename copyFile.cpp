@@ -145,15 +145,9 @@ int FileSystem::copyFile(std::string sourcePath, std::string destinationPath)
     int destInodeAddress = this->sb->inodeStartAddress + inodeIndex * sizeof(inode);
 
     // Add new dirItem to destination parent
-    std::vector<std::string> splitName = LibraryMethods::split(destinationFileName, '.');
-    char cName[8];
-    memset(cName, 0, 8);
-    memcpy(cName, splitName.at(0).c_str(), splitName.at(0).size());
-
-    char extension[3];
-    memset(extension, 0, 3);
-    if (splitName.size() == 2)
-        memcpy(extension, splitName.at(1).c_str(), splitName.at(1).size());
+    char cName[FILENAME_MAX_SIZE];
+    char extension[EXTENSION_MAX_SIZE];
+    LibraryMethods::parseName(destinationFileName, cName, extension, false);
 
     if (this->addDirItemToInode(cName, extension, destParentInodeAddr, destInodeAddress) == -1)
     {

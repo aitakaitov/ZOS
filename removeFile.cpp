@@ -3,12 +3,13 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+// Fills a directly referenced block with directoryItems and removes them from the vector
 int FileSystem::fillDirectWithDI(int blockAddress, std::vector<directoryItem> &dirItems)
 {
     int itemsPerBlock = this->sb->blockSize / sizeof(directoryItem);
-
     char diArr[sizeof(directoryItem)];
 
+    // Fill the block with DIs
     int i;
     for (i = 0; i < itemsPerBlock; i++)
     {
@@ -17,6 +18,7 @@ int FileSystem::fillDirectWithDI(int blockAddress, std::vector<directoryItem> &d
         this->writeToFS(diArr, sizeof(directoryItem), blockAddress + i * sizeof(directoryItem));
         dirItems.erase(dirItems.begin());
 
+        // If we ran out of DIs, end the filling part
         if (dirItems.empty())
         {
             i++;
@@ -25,6 +27,7 @@ int FileSystem::fillDirectWithDI(int blockAddress, std::vector<directoryItem> &d
 
     }
 
+    // If we haven't filled the whole block, we zero the rest
     memset(diArr, 0, sizeof(directoryItem));
     for (i; i < itemsPerBlock; i++)
         this->writeToFS(diArr, sizeof(directoryItem), blockAddress + i * sizeof(directoryItem));
@@ -32,11 +35,14 @@ int FileSystem::fillDirectWithDI(int blockAddress, std::vector<directoryItem> &d
     return 0;
 }
 
-
+// Performs defragmentation of directoryItems in an inode
+// Collects all the directoryItems and then fills the direct blocks one by one
+// If a block was not empty and ended up empty as a result of this reorganizing, it is deallocated and freed up
 int FileSystem::defragmentDirects(inode &ind)
 {
     int32_t directsBefore[5] = {ind.direct1, ind.direct2, ind.direct3, ind.direct4, ind.direct5};
 
+    // Collect dirItems
     std::vector<directoryItem> dirItems;
 
     if (ind.direct1 != 0)
@@ -97,6 +103,7 @@ int FileSystem::defragmentDirects(inode &ind)
 
     ind.fileSize = 0;
 
+    // Check the results, frees up the now-unused blocks and changes the directory size
     for (int i = 0; i < 5; i++)
     {
         if (directsBefore[i] != 0 && directsAfter[i] == 0)

@@ -45,7 +45,7 @@ int FileSystem::removeDirectory(std::string path)
 
     if (nameToRemove == ".")
     {
-        // TODO now it behaves like ubuntu terminal, maybe make dirItem to be the parent reference to this directory and inode the parent inode. Right now, the parent inode is the one in which the . is.
+        // now it behaves like ubuntu terminal, maybe make dirItem to be the parent reference to this directory and inode the parent inode. Right now, the parent inode is the one in which the . is.
         std::cout << "INVALID ARGUMENT" << std::endl;
         return 3;
     }

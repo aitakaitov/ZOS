@@ -72,8 +72,8 @@ int FileSystem::createFileOrDir(std::string path, bool isDirectory, FILE *file)
         this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
         // We need to add a directory item to the parent inode, which could require another block,
         // in case the ones allocated are full
-        char name[8];
-        char extension[3];
+        char name[FILENAME_MAX_SIZE];
+        char extension[EXTENSION_MAX_SIZE];
         LibraryMethods::parseName(splitPath.at(0), name, extension, isDirectory);
 
         int res = this->addDirItemToInode(name, extension, inodeAddress, this->sb->inodeStartAddress + inodeIndex * sizeof(inode));
@@ -154,8 +154,8 @@ int FileSystem::createFileOrDir(std::string path, bool isDirectory, FILE *file)
             this->toggleBitInBitmap(blockIndex, this->sb->blockMapStartAddress, this->sb->blockStartAddress - this->sb->blockMapStartAddress);
             // We need to add a directory item to the parent inode, which could require another block,
             // in case the ones allocated are full
-            char name[8];
-            char extension[3];
+            char name[FILENAME_MAX_SIZE];
+            char extension[EXTENSION_MAX_SIZE];
             LibraryMethods::parseName(lastFile, name, extension, isDirectory);
 
             int res = this->addDirItemToInode(name, extension, inodeAddress, this->sb->inodeStartAddress + inodeIndex * sizeof(inode));

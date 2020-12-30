@@ -217,6 +217,7 @@ int FileSystem::createInode(int inodeIndex, int blockIndex, int parentInodeAddre
             if (blocksNecessary == -2)
             {
                 std::cout << "FILE TOO LARGE FOR FS" << std::endl;
+                return 2;
             }
 
             if (freeBlocks < blocksNecessary)

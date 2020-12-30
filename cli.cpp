@@ -66,8 +66,11 @@ int FileSystem::processCommand(std::string command)
             std::cout << "FILE NOT FOUND" << std::endl;
             return 0;
         }
+        
         if (this->createFileOrDir(splitCommand.at(2), false, file) == 0)
             std::cout << "OK" << std::endl;
+        
+        fclose(file);
     }
     else if (splitCommand.at(0) == "outcp")
     {

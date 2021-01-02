@@ -134,8 +134,6 @@ public:
 
     // copyFile.cpp
     int copyFile(std::string sourcePath, std::string destinationPath);  // copies a file
-
-
 };
 
 

@@ -3,6 +3,11 @@
 #include "FileSystem.h"
 #include "LibraryMethods.h"
 
+FileSystem::~FileSystem()
+{
+    delete sb;
+}
+
 // Creates a new filesystem given a name, and a size
 // 1    = ERR
 // 0    = OK

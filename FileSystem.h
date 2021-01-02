@@ -53,6 +53,8 @@ public:
     std::string currentPath = "/";  // We always start in root directory
     int currentInodeAddress;        // Address of inode we are currently in
 
+    ~FileSystem();
+
     // fsIO.cpp
     int writeToFS(char *bytes, int length, int32_t address);    // Writes to FS
     int readFromFS(char *bytes, int length, int32_t address);   // Reads from FS

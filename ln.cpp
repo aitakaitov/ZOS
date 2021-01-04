@@ -37,9 +37,9 @@ int FileSystem::ln(std::string pathToFile, std::string pathToLink)
     this->readFromFS(indArr, sizeof(inode), linkParentInodeAddress);
     memcpy(&linkParentInode, indArr, sizeof(inode));
 
-    if (linkParentInode.isDirectory)
+    if (!linkParentInode.isDirectory)
     {
-        std::cout << "NOT A FILE" << std::endl;
+        std::cout << "PATH NOT FOUND" << std::endl;
         return 5;
     }
 

@@ -14,7 +14,6 @@ int FileSystem::outcp(std::string filePath, const std::string& outputPath)
     if (file == NULL)
     {
         std::cout << "PATH NOT FOUND" << std::endl;
-        fclose(file);
         return 1;
     }
     rewind(file);
